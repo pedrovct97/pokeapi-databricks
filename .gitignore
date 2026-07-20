@@ -1,0 +1,14 @@
+.databricks/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.agents/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.coverage
+htmlcov/
+.env
+.idea/
+.vscode/

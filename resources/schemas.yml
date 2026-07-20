@@ -1,0 +1,15 @@
+resources:
+  schemas:
+    bronze:
+      name: ${var.bronze_schema}
+      catalog_name: ${var.catalog}
+      comment: Dados brutos e imutáveis ingeridos da PokéAPI, com metadados de rastreabilidade.
+    silver:
+      name: ${var.silver_schema}
+      catalog_name: ${var.catalog}
+      comment: Entidades da PokéAPI normalizadas, tipadas e submetidas a regras de qualidade.
+    gold:
+      name: ${var.gold_schema}
+      catalog_name: ${var.catalog}
+      comment: Produtos analíticos, métricas e datasets preparados para consumo e machine learning.
+
