@@ -13,6 +13,9 @@ def _resource(payload: str = '{"id": 25, "name": "pikachu"}') -> FetchedResource
         http_status=200,
         payload_json=payload,
         source_observed_at=datetime(2026, 1, 1, tzinfo=UTC),
+        response_bytes=len(payload.encode("utf-8")),
+        duration_ms=25,
+        attempt_count=1,
     )
 
 
@@ -35,6 +38,7 @@ def test_accepts_nullable_business_identifiers_for_unnamed_resources() -> None:
         http_status=200,
         payload_json='{"gene_modulo": 1}',
         source_observed_at=datetime(2026, 1, 1, tzinfo=UTC),
+        response_bytes=18,
     )
 
     row = to_bronze_row(resource, "run-1", datetime.now(UTC))

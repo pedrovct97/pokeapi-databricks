@@ -11,6 +11,11 @@ WHEN NOT MATCHED THEN INSERT (
   payload_json,
   payload_sha256,
   source_observed_at,
+  response_bytes,
+  duration_ms,
+  attempt_count,
+  etag,
+  last_modified,
   ingested_at,
   run_id
 )
@@ -23,6 +28,11 @@ VALUES (
   source.payload_json,
   source.payload_sha256,
   source.source_observed_at,
+  source.response_bytes,
+  source.duration_ms,
+  source.attempt_count,
+  source.etag,
+  source.last_modified,
   source.ingested_at,
   source.run_id
 )

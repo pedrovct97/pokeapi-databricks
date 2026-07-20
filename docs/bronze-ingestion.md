@@ -21,6 +21,11 @@ observada de um recurso da API. A chave lógica é `(source_url, payload_sha256)
 reexecuções do mesmo conteúdo não duplicam dados, enquanto mudanças no payload são
 preservadas historicamente.
 
+O target continua em `mode: development`, mas define
+`experimental.skip_name_prefix_for_schema: true`. Como os schemas já terminam em `_dev`,
+isso evita nomes duplicados como `dev_<usuário>_pokeapi_bronze_dev`. O prefixo de
+desenvolvimento dos demais recursos, como jobs, permanece ativo.
+
 ## Divisão entre Python e SQL
 
 O Python fica restrito ao que SQL não resolve bem nesta fronteira: paginação HTTP,
@@ -47,13 +52,25 @@ As queries usam somente o nome totalmente qualificado da tabela como parâmetro.
 | `payload_json` | string | não | Resposta integral, sem regra de negócio. |
 | `payload_sha256` | string | não | Hash do payload usado para versão e idempotência. |
 | `source_observed_at` | timestamp | não | Momento UTC em que a resposta foi recebida. |
+| `response_bytes` | long | não | Tamanho da resposta HTTP em bytes. |
+| `duration_ms` | long | não | Duração total da requisição, incluindo retries. |
+| `attempt_count` | int | não | Quantidade de tentativas realizadas. |
+| `etag` | string | sim | ETag HTTP, quando fornecido pela origem. |
+| `last_modified` | string | sim | Last-Modified HTTP, quando fornecido pela origem. |
 | `ingested_at` | timestamp | não | Momento UTC de formação do lote Spark. |
 | `run_id` | string | não | UUID da execução que observou a versão. |
 
-As tabelas técnicas `_ingestion_runs` e `_ingestion_failures` registram reconciliação
-por endpoint e falhas individuais. Não há expectativa de nulidade para metadados
+`_ingestion_runs` registra desde `RUNNING` até o estado final, além de `list_count`,
+`page_count`, `duration_ms` e `collector_version`. `_ingestion_failures` registra falhas
+individuais com status HTTP, tentativas, duração e indicação de retry. Não há expectativa
+de nulidade para metadados
 técnicos. `resource_id`, `resource_name` e campos internos do JSON podem ser nulos por
 contrato da fonte; sua tipagem e regras de negócio pertencem à Silver.
+
+Ao migrar tabelas criadas pela versão 0.1.0, `response_bytes` é reconstruído a partir do
+JSON. Como duração e tentativas históricas não podem ser recuperadas, recebem os valores
+neutros `0` e `1`; `etag` e `last_modified` permanecem nulos. Nenhuma medição retroativa
+é inventada.
 
 ## Comportamento operacional
 
@@ -76,6 +93,11 @@ python -m pip wheel . --no-deps --no-build-isolation --no-cache-dir --wheel-dir 
 databricks bundle validate -t dev -p pokeapi-free
 ```
 
+O wheel é pré-construído intencionalmente. O bundle referencia diretamente
+`.artifacts/*.whl`, sincroniza-o para `${workspace.file_path}` e o instala em
+`environments[].spec.dependencies`; não há descoberta automática na pasta `dist` nem
+uso de `libraries` na task serverless.
+
 Deploy e execução são operações remotas e devem ser autorizados explicitamente:
 
 ```powershell
@@ -83,8 +105,13 @@ databricks bundle deploy -t dev -p pokeapi-free
 databricks bundle run bronze_ingestion -t dev -p pokeapi-free
 ```
 
-Para uma amostra de baixo custo, altere temporariamente os parâmetros do job ou execute
-o entry point com `--endpoints pokemon,type`. Após uma execução, reconcilie:
+Para uma amostra de baixo custo, sobrescreva somente o parâmetro formal `endpoints`:
+
+```powershell
+databricks bundle run -t dev -p pokeapi-free --params "endpoints=pokemon,type" bronze_ingestion
+```
+
+Após uma execução, reconcilie:
 
 ```sql
 SELECT endpoint, status, discovered_count, fetched_count, inserted_count, failed_count

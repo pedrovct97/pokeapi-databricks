@@ -4,7 +4,7 @@ Projeto educacional de engenharia de dados e machine learning construído do zer
 
 ## Estado atual
 
-**Fase 1 — Bronze em implementação.** O job genérico cobre os 48 endpoints REST v2 da
+**Fase 1 — Bronze em validação.** O job genérico cobre os 48 endpoints REST v2 da
 PokéAPI e materializa uma tabela Delta por recurso. A validação e a execução remota ainda
 precisam ser realizadas antes de considerar o Gate 1 concluído.
 
@@ -22,6 +22,8 @@ Detalhes: [arquitetura](docs/architecture.md), [governança](docs/governance.md)
 Contrato e runbook da ingestão: [Fase 1 — Bronze](docs/bronze-ingestion.md).
 As DDLs, `MERGE` e verificações de qualidade ficam em
 [`src/pokeapi_lakehouse/sql`](src/pokeapi_lakehouse/sql/), separadas do cliente HTTP Python.
+
+Piloto Silver SQL-first: [pokemon e move](docs/silver-pilot.md).
 
 ## Ambientes e isolamento
 

@@ -8,6 +8,9 @@ SELECT
        OR payload_json IS NULL
        OR payload_sha256 IS NULL
        OR source_observed_at IS NULL
+       OR response_bytes IS NULL
+       OR duration_ms IS NULL
+       OR attempt_count IS NULL
        OR ingested_at IS NULL
        OR run_id IS NULL
   ) AS technical_null_count,
