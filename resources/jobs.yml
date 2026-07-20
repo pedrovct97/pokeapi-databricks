@@ -1,0 +1,34 @@
+artifacts:
+  default:
+    type: whl
+    build: python -m build --wheel --no-isolation
+    dynamic_version: true
+
+resources:
+  jobs:
+    bronze_ingestion:
+      name: pokeapi-bronze-ingestion-${bundle.target}
+      description: Ingestão idempotente de todos os recursos REST v2 da PokéAPI na camada Bronze.
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: ingest_all_endpoints
+          environment_key: default
+          timeout_seconds: 7200
+          max_retries: 1
+          min_retry_interval_millis: 60000
+          python_wheel_task:
+            package_name: pokeapi_lakehouse
+            entry_point: bronze_ingestion
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${var.bronze_schema}
+              - --endpoints
+              - all
+          libraries:
+            - whl: ../dist/*.whl
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"

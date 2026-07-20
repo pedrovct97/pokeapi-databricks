@@ -4,7 +4,9 @@ Projeto educacional de engenharia de dados e machine learning construído do zer
 
 ## Estado atual
 
-**Fase 0 — Fundação.** Nenhum recurso foi implantado e nenhuma tabela foi criada no workspace.
+**Fase 1 — Bronze em implementação.** O job genérico cobre os 48 endpoints REST v2 da
+PokéAPI e materializa uma tabela Delta por recurso. A validação e a execução remota ainda
+precisam ser realizadas antes de considerar o Gate 1 concluído.
 
 ## Arquitetura planejada
 
@@ -16,6 +18,8 @@ Projeto educacional de engenharia de dados e machine learning construído do zer
 | ML | Simular/analisar batalhas com baseline reproduzível | Ausência de leakage, avaliação e limitações documentadas |
 
 Detalhes: [arquitetura](docs/architecture.md), [governança](docs/governance.md) e [processo por gates](docs/delivery-gates.md).
+
+Contrato e runbook da ingestão: [Fase 1 — Bronze](docs/bronze-ingestion.md).
 
 ## Ambientes e isolamento
 
@@ -38,4 +42,3 @@ databricks bundle validate -t dev -p pokeapi-free
 ```
 
 Deploy e execução remota exigem autorização explícita.
-
