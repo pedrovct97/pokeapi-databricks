@@ -6,6 +6,10 @@ bundle:
 include:
   - resources/*.yml
 
+sync:
+  include:
+    - .artifacts/*.whl
+
 variables:
   catalog:
     description: Unity Catalog que armazenará os schemas do projeto.
@@ -23,10 +27,14 @@ variables:
 workspace:
   host: https://dbc-147a7d81-86aa.cloud.databricks.com
 
+experimental:
+  # Os schemas já possuem sufixo de ambiente; não aplique também o prefixo automático
+  # calculado por `mode: development`.
+  skip_name_prefix_for_schema: true
+
 targets:
   dev:
     default: true
     mode: development
     workspace:
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
-

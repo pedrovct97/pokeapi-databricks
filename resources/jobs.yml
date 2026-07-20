@@ -1,0 +1,73 @@
+resources:
+  jobs:
+    bronze_ingestion:
+      name: pokeapi-bronze-ingestion-${bundle.target}
+      description: Ingestão idempotente de todos os recursos REST v2 da PokéAPI na camada Bronze.
+      max_concurrent_runs: 1
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.bronze_schema}
+        - name: endpoints
+          default: all
+      tasks:
+        - task_key: ingest_all_endpoints
+          environment_key: default
+          timeout_seconds: 7200
+          max_retries: 1
+          min_retry_interval_millis: 60000
+          python_wheel_task:
+            package_name: pokeapi_lakehouse
+            entry_point: bronze_ingestion
+            parameters:
+              - --catalog
+              - "{{job.parameters.catalog}}"
+              - --schema
+              - "{{job.parameters.schema}}"
+              - --endpoints
+              - "{{job.parameters.endpoints}}"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"
+            dependencies:
+              - ${workspace.file_path}/.artifacts/pokeapi_lakehouse-0.4.1-py3-none-any.whl
+
+    silver_transformation:
+      name: pokeapi-silver-transformation-${bundle.target}
+      description: Transformação SQL-first Silver do domínio de Pokémon e batalhas.
+      max_concurrent_runs: 1
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: bronze_schema
+          default: ${var.bronze_schema}
+        - name: silver_schema
+          default: ${var.silver_schema}
+        - name: entities
+          default: all
+      tasks:
+        - task_key: transform_pokemon_and_move
+          environment_key: default
+          timeout_seconds: 3600
+          max_retries: 1
+          min_retry_interval_millis: 60000
+          python_wheel_task:
+            package_name: pokeapi_lakehouse
+            entry_point: silver_transform
+            parameters:
+              - --catalog
+              - "{{job.parameters.catalog}}"
+              - --bronze-schema
+              - "{{job.parameters.bronze_schema}}"
+              - --silver-schema
+              - "{{job.parameters.silver_schema}}"
+              - --entities
+              - "{{job.parameters.entities}}"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"
+            dependencies:
+              - ${workspace.file_path}/.artifacts/pokeapi_lakehouse-0.4.1-py3-none-any.whl
