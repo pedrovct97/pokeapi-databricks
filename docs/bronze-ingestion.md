@@ -72,6 +72,7 @@ contrato da fonte; sua tipagem e regras de negócio pertencem à Silver.
 Valide antes de alterar o workspace:
 
 ```powershell
+python -m pip wheel . --no-deps --no-build-isolation --no-cache-dir --wheel-dir .artifacts
 databricks bundle validate -t dev -p pokeapi-free
 ```
 

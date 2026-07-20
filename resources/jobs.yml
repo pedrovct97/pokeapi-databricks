@@ -1,7 +1,7 @@
 artifacts:
   default:
     type: whl
-    build: python -m build --wheel --no-isolation
+    build: python -m pip wheel . --no-deps --no-build-isolation --no-cache-dir --wheel-dir .artifacts
     dynamic_version: true
 
 resources:
@@ -27,7 +27,7 @@ resources:
               - --endpoints
               - all
           libraries:
-            - whl: ../dist/*.whl
+            - whl: ../.artifacts/*.whl
       environments:
         - environment_key: default
           spec:

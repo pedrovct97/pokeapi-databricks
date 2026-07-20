@@ -14,10 +14,10 @@ bronze_ingestion = "pokeapi_lakehouse.cli:main"
 
 [project.optional-dependencies]
 dev = [
-  "build>=1.2,<2",
   "mypy>=1.10,<2",
   "pytest>=8,<9",
   "ruff>=0.5,<1",
+  "wheel>=0.44,<1",
 ]
 
 [tool.setuptools.packages.find]

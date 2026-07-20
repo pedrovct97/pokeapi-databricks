@@ -40,6 +40,7 @@ python -m pip install -e ".[dev]"
 python -m ruff check .
 python -m mypy src
 python -m pytest
+python -m pip wheel . --no-deps --no-build-isolation --no-cache-dir --wheel-dir .artifacts
 databricks bundle validate -t dev -p pokeapi-free
 ```
 
