@@ -21,6 +21,22 @@ observada de um recurso da API. A chave lógica é `(source_url, payload_sha256)
 reexecuções do mesmo conteúdo não duplicam dados, enquanto mudanças no payload são
 preservadas historicamente.
 
+## Divisão entre Python e SQL
+
+O Python fica restrito ao que SQL não resolve bem nesta fronteira: paginação HTTP,
+retry, concorrência limitada, hash e entrega do lote ao Spark. Criação física, comentários
+de catálogo, `MERGE`, inserção das auditorias e validações pós-escrita são queries Spark
+SQL explícitas em `src/pokeapi_lakehouse/sql/`:
+
+- `create_bronze_table.sql`: DDL comum das 48 tabelas de recursos;
+- `merge_bronze_table.sql`: escrita idempotente e histórica;
+- `quality_bronze_table.sql`: nulos técnicos e duplicatas;
+- `create_ingestion_runs.sql` e `create_ingestion_failures.sql`: DDLs de observabilidade;
+- `insert_ingestion_runs.sql` e `insert_ingestion_failures.sql`: auditoria via SQL.
+
+As queries usam somente o nome totalmente qualificado da tabela como parâmetro. O nome
+é validado antes da interpolação para impedir identificadores ou comandos arbitrários.
+
 | Coluna | Tipo | Nulável | Semântica |
 |---|---|---:|---|
 | `endpoint` | string | não | Recurso REST v2 de origem. |

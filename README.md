@@ -20,6 +20,8 @@ precisam ser realizadas antes de considerar o Gate 1 concluído.
 Detalhes: [arquitetura](docs/architecture.md), [governança](docs/governance.md) e [processo por gates](docs/delivery-gates.md).
 
 Contrato e runbook da ingestão: [Fase 1 — Bronze](docs/bronze-ingestion.md).
+As DDLs, `MERGE` e verificações de qualidade ficam em
+[`src/pokeapi_lakehouse/sql`](src/pokeapi_lakehouse/sql/), separadas do cliente HTTP Python.
 
 ## Ambientes e isolamento
 

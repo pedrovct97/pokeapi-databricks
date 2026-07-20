@@ -12,6 +12,7 @@ from typing import Any
 
 from pokeapi_lakehouse.endpoints import Endpoint
 from pokeapi_lakehouse.pokeapi_client import FetchedResource, FetchFailure, PokeApiClient
+from pokeapi_lakehouse.sql_queries import sql_query
 
 _RESOURCE_ID = re.compile(r"/([0-9]+)/?$")
 
@@ -29,18 +30,6 @@ run_id string, endpoint string, started_at timestamp, finished_at timestamp,
 status string, discovered_count long, fetched_count long, inserted_count long,
 failed_count long, error_message string
 """
-BRONZE_COMMENTS = {
-    "endpoint": "Recurso REST v2 de origem.",
-    "resource_id": "Identificador numérico extraído da URL, quando disponível.",
-    "resource_name": "Nome presente no payload, quando disponível.",
-    "source_url": "URL canônica do recurso coletado.",
-    "http_status": "Status HTTP observado na coleta.",
-    "payload_json": "Resposta JSON integral, sem regras de negócio.",
-    "payload_sha256": "Hash SHA-256 do payload usado para versão e idempotência.",
-    "source_observed_at": "Timestamp UTC de recebimento da resposta.",
-    "ingested_at": "Timestamp UTC de formação do lote Bronze.",
-    "run_id": "UUID da execução de ingestão.",
-}
 
 
 def _resource_id(url: str) -> int | None:
@@ -93,38 +82,40 @@ def validate_bronze_rows(rows: list[dict[str, Any]]) -> None:
 
 
 def _merge_rows(spark: Any, table: str, rows: list[dict[str, Any]]) -> int:
+    spark.sql(sql_query("create_bronze_table", table=table))
     if not rows:
         return 0
     frame = spark.createDataFrame(rows, schema=BRONZE_SCHEMA)
     frame.createOrReplaceTempView("pokeapi_bronze_batch")
-    spark.sql(
-        f"""
-        CREATE TABLE IF NOT EXISTS {table}
-        USING DELTA
-        AS SELECT * FROM pokeapi_bronze_batch WHERE 1 = 0
-        """
-    )
-    spark.sql(f"COMMENT ON TABLE {table} IS 'Payloads JSON imutáveis da PokéAPI REST v2'")
-    for column, comment in BRONZE_COMMENTS.items():
-        spark.sql(f"ALTER TABLE {table} ALTER COLUMN {column} COMMENT '{comment}'")
     before = spark.table(table).count()
-    spark.sql(
-        f"""
-        MERGE INTO {table} AS target
-        USING pokeapi_bronze_batch AS source
-          ON target.source_url = source.source_url
-         AND target.payload_sha256 = source.payload_sha256
-        WHEN NOT MATCHED THEN INSERT *
-        """
-    )
-    return int(spark.table(table).count() - before)
+    spark.sql(sql_query("merge_bronze_table", table=table))
+    inserted_count = int(spark.table(table).count() - before)
+
+    quality = spark.sql(sql_query("quality_bronze_table", table=table)).first()
+    if quality is None or quality.technical_null_count or quality.duplicate_count:
+        raise ValueError(
+            f"qualidade pós-escrita inválida em {table}: "
+            f"nulos={quality.technical_null_count if quality else 'unknown'}, "
+            f"duplicatas={quality.duplicate_count if quality else 'unknown'}"
+        )
+    return inserted_count
 
 
 def _append_failures(spark: Any, table: str, failures: list[FetchFailure], run_id: str) -> None:
+    spark.sql(sql_query("create_ingestion_failures", table=table))
     if not failures:
         return
     rows = [{**asdict(failure), "run_id": run_id} for failure in failures]
-    spark.createDataFrame(rows, schema=FAILURE_SCHEMA).write.mode("append").saveAsTable(table)
+    frame = spark.createDataFrame(rows, schema=FAILURE_SCHEMA)
+    frame.createOrReplaceTempView("pokeapi_ingestion_failures_batch")
+    spark.sql(sql_query("insert_ingestion_failures", table=table))
+
+
+def _append_runs(spark: Any, table: str, rows: list[dict[str, Any]]) -> None:
+    spark.sql(sql_query("create_ingestion_runs", table=table))
+    frame = spark.createDataFrame(rows, schema=RUN_SCHEMA)
+    frame.createOrReplaceTempView("pokeapi_ingestion_runs_batch")
+    spark.sql(sql_query("insert_ingestion_runs", table=table))
 
 
 def ingest_endpoints(
@@ -183,9 +174,7 @@ def ingest_endpoints(
                 }
             )
 
-    spark.createDataFrame(run_rows, schema=RUN_SCHEMA).write.mode("append").saveAsTable(
-        f"{full_schema}._ingestion_runs"
-    )
+    _append_runs(spark, f"{full_schema}._ingestion_runs", run_rows)
     if has_failures and fail_on_partial:
         failed = [row["endpoint"] for row in run_rows if row["status"] != "SUCCESS"]
         raise RuntimeError(f"ingestão {run_id} terminou com falhas: {', '.join(failed)}")
