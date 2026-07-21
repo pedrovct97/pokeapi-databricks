@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pokeapi-lakehouse"
-version = "0.4.1"
+version = "0.8.0"
 description = "Pipeline Lakehouse da PokéAPI para Databricks Free Edition"
 requires-python = ">=3.11"
 dependencies = []
@@ -12,6 +12,8 @@ dependencies = []
 [project.scripts]
 bronze_ingestion = "pokeapi_lakehouse.cli:main"
 silver_transform = "pokeapi_lakehouse.silver_cli:main"
+gold_transform = "pokeapi_lakehouse.gold_cli:main"
+battle_transform = "pokeapi_lakehouse.battle_cli:main"
 
 [project.optional-dependencies]
 dev = [

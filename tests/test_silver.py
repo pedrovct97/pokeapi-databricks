@@ -23,6 +23,11 @@ def test_all_selects_battle_domain_scope() -> None:
         "pokemon_ability",
         "pokemon_move",
         "type_damage_relation",
+        "language",
+        "pokemon_species_translation",
+        "move_translation",
+        "ability_translation",
+        "type_translation",
     ]
 
 
@@ -58,3 +63,18 @@ def test_relationship_stages_expose_lineage_contract() -> None:
             literals={"run_id": "test-run"},
         )
         assert "source_payload_sha256" in query
+
+
+def test_translation_stages_use_null_safe_array_access() -> None:
+    for entity_name, bronze_name in (
+        ("pokemon_species_translation", "pokemon_species"),
+        ("move_translation", "move"),
+        ("ability_translation", "ability"),
+    ):
+        query = sql_query(
+            f"stage_silver_{entity_name}",
+            identifiers={"bronze_table": f"workspace.pokeapi_bronze_dev.{bronze_name}"},
+            literals={"run_id": "test-run"},
+        )
+        assert "GET(FILTER(" in query
+        assert "ELEMENT_AT(FILTER(" not in query

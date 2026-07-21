@@ -1,0 +1,104 @@
+# Gold: fundação de batalhas
+
+## Ruleset
+
+Todos os produtos desta fase usam o identificador
+`scarlet-violet|singles|level-50|v1`:
+
+- jogos Scarlet/Violet;
+- batalha individual 1v1;
+- nível 50;
+- IV 31;
+- EVs e nature neutros;
+- sem terastalização, clima, terreno ou condições de status.
+
+O ruleset é uma dimensão semântica do cálculo. Resultados de versões diferentes não devem ser
+misturados.
+
+## Produtos
+
+### `dim_ruleset`, `dim_type` e `dim_ability`
+
+Dimensões conformadas para o ruleset, tipos elementais e habilidades. Centralizam descrições e
+chaves `ruleset|...`, `type|id` e `ability|id`, evitando repetir atributos descritivos nos fatos.
+
+### `fact_type_matchup`
+
+Uma linha por tipo atacante e tipo defensor. Expande as exceções da Silver com o multiplicador
+neutro `1.0`, formando uma matriz completa. A chave é
+`attacking_type_id|defending_type_id`.
+
+### `fact_pokemon_battle_stats`
+
+Uma linha por Pokémon publicado em `dim_pokemon`. Contém os seis stats, total de stats,
+perfil ofensivo e arrays de fraquezas, resistências e imunidades. Para Pokémon de dois tipos, os
+multiplicadores são combinados por produto: por exemplo, `2 × 2 = 4` e `2 × 0.5 = 1`.
+
+Os stats ainda são valores base, não stats finais de combate. EV, IV, nature e nível serão
+aplicados pelo motor de simulação posterior.
+
+### `dim_move`
+
+Uma linha por movimento. `expected_power` é um baseline simples:
+
+```text
+power × accuracy / 100
+```
+
+Precisão nula é tratada como `100` somente nessa métrica de ordenação. O campo não representa a
+fórmula oficial completa de dano e não considera STAB, defesa, efeitos, prioridade ou habilidade.
+
+### `bridge_pokemon_move`
+
+Uma linha por Pokémon, movimento, método e nível dentro de `scarlet-violet`. A chave também inclui
+método e nível para preservar as diferentes formas de aprendizado. Esta tabela impede que o motor
+recomende movimentos indisponíveis no ruleset.
+
+## Qualidade e linhagem
+
+Cada produto possui DDL, staging, `MERGE` idempotente e consulta de qualidade. `_gold_runs`
+registra uma linha por produto e execução. Nulos técnicos, faixas inválidas ou chaves duplicadas
+fazem a task falhar.
+
+O job `gold_transformation` executa `pokemon_catalog` primeiro e, após sucesso, publica os quatro
+produtos de batalha.
+
+## Modelo dimensional e compatibilidade
+
+Os objetos canônicos seguem os prefixos `dim_`, `fact_` e `bridge_`. Depois da publicação e da
+qualidade, o job substitui os nomes anteriores por views somente leitura:
+
+| View legada | Objeto canônico |
+|---|---|
+| `pokemon_catalog` | `dim_pokemon` |
+| `type_matchup_matrix` | `fact_type_matchup` |
+| `pokemon_battle_profile` | `fact_pokemon_battle_stats` |
+| `battle_move` | `dim_move` |
+| `pokemon_move_pool` | `bridge_pokemon_move` |
+
+Novos pipelines devem usar os objetos canônicos. As views existem apenas para transição e não
+recebem `MERGE`.
+
+## Validação no Databricks
+
+```sql
+SELECT product, status, published_count, error_message
+FROM workspace.pokeapi_gold_dev._gold_runs
+ORDER BY started_at DESC;
+
+SELECT damage_multiplier, COUNT(*) AS matchups
+FROM workspace.pokeapi_gold_dev.fact_type_matchup
+GROUP BY damage_multiplier
+ORDER BY damage_multiplier;
+
+SELECT pokemon_id, pokemon_name, base_stat_total, weaknesses, resistances, immunities
+FROM workspace.pokeapi_gold_dev.fact_pokemon_battle_stats
+WHERE pokemon_id IN (1, 6, 25)
+ORDER BY pokemon_id;
+
+SELECT COUNT(*) AS move_pool_rows, COUNT(DISTINCT pokemon_id) AS pokemon
+FROM workspace.pokeapi_gold_dev.bridge_pokemon_move;
+```
+
+Somente após essa reconciliação serão materializados o ranking par-a-par de counters e as regras
+versionadas de itens e habilidades.

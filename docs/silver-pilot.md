@@ -47,6 +47,17 @@ Ambas mantêm `source_url`, `source_payload_sha256`, `source_observed_at`,
 - `type_damage_relation`: exceções à efetividade neutra. Armazena multiplicadores `0.0`,
   `0.5` e `2.0`; a ausência de relação significa `1.0`.
 
+### Idiomas e traduções
+
+- `language`: cadastro restrito ao idioma de consumo `en`.
+- `pokemon_species_translation`: nome, gênero e descrição por espécie e idioma.
+- `move_translation`: nome, descrição e efeitos por movimento e idioma.
+- `ability_translation`: nome, descrição e efeitos por habilidade e idioma.
+- `type_translation`: nome de tipo por idioma.
+
+As traduções usam `entity_id + language_id` como chave natural e são atualizadas juntas na
+mesma execução. Somente conteúdo oficial em inglês é publicado, sem inventar traduções.
+
 Depois da publicação completa, 14 regras SQL verificam integridade referencial entre
 dimensões e relações, presença de tipos/estatísticas e os seis stats esperados para
 Pokémon padrão. O resultado aparece em `_silver_runs` como
@@ -115,6 +126,6 @@ ORDER BY move_id
 LIMIT 20;
 ```
 
-O domínio é aprovado quando as 11 entidades e `_referential_integrity` terminam em
+O domínio é aprovado quando as 16 entidades e `_referential_integrity` terminam em
 `SUCCESS`, quarentena é zero ou explicada, as contagens reconciliam com a versão atual da Bronze e uma segunda
 execução apresenta `inserted_count = 0`.

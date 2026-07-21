@@ -1,0 +1,2 @@
+MERGE INTO {{table}} t USING gold_ruleset_stage s ON t.ruleset_key=s.ruleset_key
+WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT * WHEN NOT MATCHED BY SOURCE THEN DELETE

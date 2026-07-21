@@ -4,9 +4,8 @@ Projeto educacional de engenharia de dados e machine learning construído do zer
 
 ## Estado atual
 
-**Fase 1 — Bronze em validação.** O job genérico cobre os 48 endpoints REST v2 da
-PokéAPI e materializa uma tabela Delta por recurso. A validação e a execução remota ainda
-precisam ser realizadas antes de considerar o Gate 1 concluído.
+Bronze e Silver validadas no Databricks. O primeiro produto Gold é o catálogo de Pokémon em
+inglês, idioma disponibilizado pela fonte para o conteúdo consumido.
 
 ## Arquitetura planejada
 
@@ -23,7 +22,11 @@ Contrato e runbook da ingestão: [Fase 1 — Bronze](docs/bronze-ingestion.md).
 As DDLs, `MERGE` e verificações de qualidade ficam em
 [`src/pokeapi_lakehouse/sql`](src/pokeapi_lakehouse/sql/), separadas do cliente HTTP Python.
 
-Piloto Silver SQL-first: [pokemon e move](docs/silver-pilot.md).
+Silver SQL-first: [domínio de Pokémon e batalha](docs/silver-pilot.md).
+
+Gold SQL-first: [catálogo de Pokémon em inglês](docs/gold-pokemon-catalog.md).
+
+Fundação para batalhas: [matriz, perfis e movimentos](docs/battle-foundation.md).
 
 ## Ambientes e isolamento
 

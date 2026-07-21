@@ -1,0 +1,5 @@
+MERGE INTO {{table}} t USING gold_pokemon_catalog_stage s
+ON t.pokemon_key=s.pokemon_key
+WHEN MATCHED THEN UPDATE SET *
+WHEN NOT MATCHED THEN INSERT *
+WHEN NOT MATCHED BY SOURCE THEN DELETE
