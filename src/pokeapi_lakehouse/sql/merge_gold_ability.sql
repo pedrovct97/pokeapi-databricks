@@ -1,0 +1,2 @@
+MERGE INTO {{table}} t USING gold_ability_stage s ON t.ability_key=s.ability_key
+WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT * WHEN NOT MATCHED BY SOURCE THEN DELETE

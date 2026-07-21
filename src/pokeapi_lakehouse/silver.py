@@ -35,6 +35,15 @@ SILVER_ENTITIES: dict[str, SilverEntity] = {
     "type_damage_relation": SilverEntity(
         "type_damage_relation", "type", "silver_type_damage_relation_stage"
     ),
+    "language": SilverEntity("language", "language", "silver_language_stage"),
+    "pokemon_species_translation": SilverEntity(
+        "pokemon_species_translation", "pokemon_species", "silver_pokemon_species_translation_stage"
+    ),
+    "move_translation": SilverEntity("move_translation", "move", "silver_move_translation_stage"),
+    "ability_translation": SilverEntity(
+        "ability_translation", "ability", "silver_ability_translation_stage"
+    ),
+    "type_translation": SilverEntity("type_translation", "type", "silver_type_translation_stage"),
 }
 
 SILVER_RUN_SCHEMA = """
