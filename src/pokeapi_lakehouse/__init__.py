@@ -1,3 +1,3 @@
 """Componentes compartilhados do Lakehouse da PokéAPI."""
 
-__version__ = "0.9.3"
+__version__ = "0.9.5"

@@ -1,3 +1,5 @@
+from importlib.resources import files
+
 from pokeapi_lakehouse.battle import BATTLE_PRODUCTS
 from pokeapi_lakehouse.sql_queries import sql_query
 
@@ -124,3 +126,57 @@ def test_matchup_numeric_contract_uses_decimal_scale_two() -> None:
     assert "defender_damage_pct DECIMAL(10,2) NOT NULL" in query
     assert "matchup_score DECIMAL(10,2) NOT NULL" in query
     assert "attacker_win_probability DECIMAL(4,2) NOT NULL" in query
+
+
+def test_gold_create_sql_columns_are_documented() -> None:
+    sql_dir = files("pokeapi_lakehouse").joinpath("sql")
+    data_types = (
+        " STRING",
+        " BIGINT",
+        " DOUBLE",
+        " DECIMAL",
+        " INT",
+        " BOOLEAN",
+        " ARRAY",
+        " TIMESTAMP",
+    )
+    offenders: list[str] = []
+
+    for sql_file in sql_dir.iterdir():
+        if not sql_file.name.startswith("create_gold_") or sql_file.suffix != ".sql":
+            continue
+        for line_number, line in enumerate(sql_file.read_text().splitlines(), start=1):
+            stripped = line.strip()
+            if (
+                any(data_type in stripped for data_type in data_types)
+                and not stripped.startswith(("CREATE ", "USING ", "COMMENT ", ")"))
+                and " COMMENT " not in stripped
+            ):
+                offenders.append(f"{sql_file.name}:{line_number}: {stripped}")
+
+    assert offenders == []
+
+
+def test_battle_foundation_create_sql_matches_stage_contracts() -> None:
+    type_matchup = sql_query(
+        "create_gold_type_matchup_matrix",
+        table="workspace.pokeapi_gold_dev.fact_type_matchup",
+    )
+    assert "matchup_key STRING NOT NULL" in type_matchup
+    assert "ruleset_key STRING NOT NULL" in type_matchup
+    assert "type_matchup_key" not in type_matchup
+
+    battle_profile = sql_query(
+        "create_gold_pokemon_battle_profile",
+        table="workspace.pokeapi_gold_dev.fact_pokemon_battle_stats",
+    )
+    assert "primary_offense STRING NOT NULL" in battle_profile
+    assert "primary_type STRING" not in battle_profile
+    assert "secondary_type STRING" not in battle_profile
+
+    move_pool = sql_query(
+        "create_gold_pokemon_move_pool",
+        table="workspace.pokeapi_gold_dev.bridge_pokemon_move",
+    )
+    assert "ruleset_key STRING NOT NULL" in move_pool
+    assert "ruleset_id STRING NOT NULL" in move_pool

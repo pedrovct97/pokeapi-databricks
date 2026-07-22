@@ -64,7 +64,25 @@ produto da efetividade dos tipos e fator aleatório médio `0.925`.
 `attacker_win_probability` é uma transformação logística do score determinístico. Ela é um label
 sintético para validação e futuro experimento de ML; não representa frequência observada em
 batalhas reais. A tabela registra movimento, multiplicadores, dano, percentual de HP, turnos para
-KO, ordem esperada, vencedor e justificativa.
+KO, ordem esperada, vencedor e justificativa. As métricas finais de dano, percentual,
+score e probabilidade são publicadas como `DECIMAL` para evitar ruído visual/binário de
+`DOUBLE` em consultas e dashboards.
+
+Principais colunas documentadas no Unity Catalog:
+
+| Coluna | Semântica |
+|---|---|
+| `matchup_key` | Chave direcional do confronto no formato `matchup|ruleset|attacker_id|defender_id`. |
+| `attacker_*` | Métricas calculadas do melhor movimento do Pokémon atacante contra o defensor. |
+| `defender_*` | Métricas calculadas do melhor movimento do defensor contra o atacante. |
+| `*_type_multiplier` | Efetividade combinada do tipo do movimento contra os tipos do alvo. |
+| `*_stab_multiplier` | Multiplicador STAB; `1.5` quando movimento e Pokémon compartilham tipo. |
+| `*_expected_damage` | Dano esperado arredondado em `DECIMAL(10,2)`. |
+| `*_damage_pct` | Percentual de HP removido, publicado como `DECIMAL(10,2)`. |
+| `*_turns_to_ko` | Turnos estimados para nocautear; `999` quando o lado não consegue causar dano. |
+| `matchup_score` | Score determinístico em `DECIMAL(10,2)` usado como entrada da probabilidade sintética. |
+| `attacker_win_probability` | Probabilidade sintética em `DECIMAL(4,2)`, não observacional. |
+| `prediction_reason` | Explicação auditável contendo melhor movimento, efetividade, turnos e imunidades. |
 
 ## Qualidade e linhagem
 

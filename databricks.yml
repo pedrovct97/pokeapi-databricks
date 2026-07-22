@@ -13,7 +13,7 @@ sync:
 variables:
   package_wheel_path:
     description: Caminho do wheel sincronizado no workspace para os jobs serverless.
-    default: ${workspace.file_path}/.artifacts/pokeapi_lakehouse-0.9.3-py3-none-any.whl
+    default: ${workspace.file_path}/.artifacts/pokeapi_lakehouse-0.9.5-py3-none-any.whl
   catalog:
     description: Unity Catalog que armazenará os schemas do projeto.
     default: workspace
