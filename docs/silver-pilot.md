@@ -44,6 +44,7 @@ Ambas mantêm `source_url`, `source_payload_sha256`, `source_observed_at`,
 - `pokemon_stat`: uma linha por Pokémon e estatística, com `base_stat` e `effort`.
 - `pokemon_ability`: uma linha por Pokémon, habilidade e slot.
 - `pokemon_move`: uma linha por Pokémon, movimento, versão, método e nível de aprendizado.
+- `pokemon_media`: imagens oficiais e sprites fornecidos pelo payload de Pokémon.
 - `type_damage_relation`: exceções à efetividade neutra. Armazena multiplicadores `0.0`,
   `0.5` e `2.0`; a ausência de relação significa `1.0`.
 
@@ -126,6 +127,6 @@ ORDER BY move_id
 LIMIT 20;
 ```
 
-O domínio é aprovado quando as 16 entidades e `_referential_integrity` terminam em
+O domínio é aprovado quando as 17 entidades e `_referential_integrity` terminam em
 `SUCCESS`, quarentena é zero ou explicada, as contagens reconciliam com a versão atual da Bronze e uma segunda
 execução apresenta `inserted_count = 0`.

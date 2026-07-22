@@ -18,7 +18,7 @@ Cada tabela ou view deverá documentar:
 - Catálogo de desenvolvimento: `workspace`.
 - Schemas: `pokeapi_<camada>_dev`.
 - Tabelas e colunas: `snake_case`, em inglês para acompanhar o contrato da API.
-- Timestamps técnicos: UTC e sufixo `_at`.
+- Timestamps técnicos: horário de Brasília (UTC-3) e sufixo `_at`.
 - Datas: sufixo `_date`.
 - Identificadores: sufixo `_id`.
 - Views: prefixo `vw_` somente quando necessário para distingui-las de tabelas publicadas.

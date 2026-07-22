@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import time
 import uuid
-from datetime import UTC, datetime
 from typing import Any
 
 from pokeapi_lakehouse import __version__
 from pokeapi_lakehouse.sql_queries import sql_query
+from pokeapi_lakehouse.time_utils import configure_brasilia_timezone, now_brasilia
 
 GOLD_RUN_SCHEMA = """
 gold_run_id string, product string, started_at timestamp, finished_at timestamp,
@@ -32,12 +32,19 @@ def replace_with_compatibility_view(spark: Any, legacy: str, canonical: str) -> 
     spark.sql(f"CREATE VIEW {legacy} AS SELECT * FROM {canonical}")
 
 
+def _ensure_columns(spark: Any, table: str, columns: dict[str, str]) -> None:
+    existing = {field.name for field in spark.table(table).schema.fields}
+    for name, data_type in columns.items():
+        if name not in existing:
+            spark.sql(f"ALTER TABLE {table} ADD COLUMNS ({name} {data_type})")
+
+
 def transform_gold_pokemon_catalog(
     spark: Any, catalog: str, silver_schema: str, gold_schema: str
 ) -> str:
     """Publish one current catalog row per Pokémon and requested language."""
     run_id = str(uuid.uuid4())
-    started_at = datetime.now(UTC)
+    started_at = now_brasilia()
     started_clock = time.perf_counter()
     silver = f"{catalog}.{silver_schema}"
     gold = f"{catalog}.{gold_schema}"
@@ -55,10 +62,20 @@ def transform_gold_pokemon_catalog(
         "transformer_version": __version__,
         "error_message": None,
     }
-    spark.conf.set("spark.sql.session.timeZone", "UTC")
+    configure_brasilia_timezone(spark)
     _upsert_run(spark, runs_table, row)
     try:
         spark.sql(sql_query("create_gold_pokemon_catalog", table=target))
+        _ensure_columns(
+            spark,
+            target,
+            {
+                "official_artwork_url": "STRING",
+                "official_artwork_shiny_url": "STRING",
+                "sprite_url": "STRING",
+                "sprite_shiny_url": "STRING",
+            },
+        )
         identifiers = {
             name: f"{silver}.{name}"
             for name in (
@@ -70,6 +87,7 @@ def transform_gold_pokemon_catalog(
                 "pokemon_stat",
                 "pokemon_ability",
                 "ability_translation",
+                "pokemon_media",
             )
         }
         spark.sql(
@@ -98,14 +116,14 @@ def transform_gold_pokemon_catalog(
         published_count = spark.table(target).count()
         replace_with_compatibility_view(spark, legacy, target)
         row.update(
-            finished_at=datetime.now(UTC),
+            finished_at=now_brasilia(),
             status="SUCCESS",
             published_count=published_count,
             duration_ms=round((time.perf_counter() - started_clock) * 1000),
         )
     except Exception as exc:
         row.update(
-            finished_at=datetime.now(UTC),
+            finished_at=now_brasilia(),
             status="FAILED",
             duration_ms=round((time.perf_counter() - started_clock) * 1000),
             error_message=f"{type(exc).__name__}: {exc}"[:1000],

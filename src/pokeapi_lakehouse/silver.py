@@ -5,11 +5,11 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from typing import Any
 
 from pokeapi_lakehouse import __version__
 from pokeapi_lakehouse.sql_queries import sql_query
+from pokeapi_lakehouse.time_utils import configure_brasilia_timezone, now_brasilia
 
 
 @dataclass(frozen=True)
@@ -32,6 +32,7 @@ SILVER_ENTITIES: dict[str, SilverEntity] = {
     "pokemon_stat": SilverEntity("pokemon_stat", "pokemon", "silver_pokemon_stat_stage"),
     "pokemon_ability": SilverEntity("pokemon_ability", "pokemon", "silver_pokemon_ability_stage"),
     "pokemon_move": SilverEntity("pokemon_move", "pokemon", "silver_pokemon_move_stage"),
+    "pokemon_media": SilverEntity("pokemon_media", "pokemon", "silver_pokemon_media_stage"),
     "type_damage_relation": SilverEntity(
         "type_damage_relation", "type", "silver_type_damage_relation_stage"
     ),
@@ -95,12 +96,12 @@ def transform_silver(
     silver_namespace = f"{catalog}.{silver_schema}"
     runs_table = f"{silver_namespace}._silver_runs"
     quarantine_table = f"{silver_namespace}._quarantine"
-    spark.conf.set("spark.sql.session.timeZone", "UTC")
+    configure_brasilia_timezone(spark)
     failures: list[str] = []
 
     spark.sql(sql_query("create_silver_quarantine", table=quarantine_table))
     for entity in entities:
-        started_at = datetime.now(UTC)
+        started_at = now_brasilia()
         started_clock = time.perf_counter()
         run_row: dict[str, Any] = {
             "silver_run_id": silver_run_id,
@@ -157,7 +158,7 @@ def transform_silver(
                     f"válidos={metrics.valid_count}, publicados={published_count}"
                 )
             run_row.update(
-                finished_at=datetime.now(UTC),
+                finished_at=now_brasilia(),
                 status="SUCCESS",
                 source_count=int(metrics.source_count),
                 valid_count=int(metrics.valid_count),
@@ -169,7 +170,7 @@ def transform_silver(
         except Exception as exc:
             failures.append(entity.name)
             run_row.update(
-                finished_at=datetime.now(UTC),
+                finished_at=now_brasilia(),
                 status="FAILED",
                 duration_ms=round((time.perf_counter() - started_clock) * 1000),
                 error_message=f"{type(exc).__name__}: {exc}"[:1000],
@@ -178,7 +179,7 @@ def transform_silver(
 
     selected_names = {entity.name for entity in entities}
     if not failures and selected_names == set(SILVER_ENTITIES):
-        integrity_started = datetime.now(UTC)
+        integrity_started = now_brasilia()
         integrity_clock = time.perf_counter()
         integrity_row: dict[str, Any] = {
             "silver_run_id": silver_run_id,
@@ -202,7 +203,7 @@ def transform_silver(
         ).collect()
         violation_count = sum(int(row.violation_count) for row in violations)
         integrity_row.update(
-            finished_at=datetime.now(UTC),
+            finished_at=now_brasilia(),
             status="FAILED" if violations else "SUCCESS",
             valid_count=14 - len(violations),
             quarantined_count=violation_count,

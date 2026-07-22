@@ -7,6 +7,6 @@ CREATE TABLE IF NOT EXISTS {{table}} (
   source_url STRING NOT NULL COMMENT 'URL do recurso Bronze',
   source_payload_sha256 STRING NOT NULL COMMENT 'Hash da versão Bronze',
   source_observed_at TIMESTAMP NOT NULL COMMENT 'Momento de observação na origem',
-  silver_transformed_at TIMESTAMP NOT NULL COMMENT 'Momento UTC da transformação',
+  silver_transformed_at TIMESTAMP NOT NULL COMMENT 'Momento horário de Brasília (UTC-3) da transformação',
   silver_run_id STRING NOT NULL COMMENT 'Execução Silver responsável'
 ) USING DELTA COMMENT 'Idiomas de consumo suportados, normalizados da PokéAPI'

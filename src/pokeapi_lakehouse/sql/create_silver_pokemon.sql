@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS {{table}} (
   species_name STRING COMMENT 'Nome da espécie relacionada',
   source_url STRING NOT NULL COMMENT 'URL do registro Bronze utilizado',
   source_payload_sha256 STRING NOT NULL COMMENT 'Versão do payload Bronze',
-  source_observed_at TIMESTAMP NOT NULL COMMENT 'Momento UTC da observação na fonte',
-  silver_transformed_at TIMESTAMP NOT NULL COMMENT 'Momento UTC da transformação',
+  source_observed_at TIMESTAMP NOT NULL COMMENT 'Momento horário de Brasília (UTC-3) da observação na fonte',
+  silver_transformed_at TIMESTAMP NOT NULL COMMENT 'Momento horário de Brasília (UTC-3) da transformação',
   silver_run_id STRING NOT NULL COMMENT 'UUID da execução Silver'
 )
 USING DELTA

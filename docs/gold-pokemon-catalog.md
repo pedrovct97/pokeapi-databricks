@@ -16,6 +16,9 @@ os textos oficiais em inglês, sem criar traduções artificiais.
 A tabela usa `CLUSTER BY (pokemon_id)`. Como constraints Delta podem ser informativas, a
 execução também verifica a unicidade da chave lógica.
 
+A dimensão também expõe arte oficial e sprites provenientes de `silver.pokemon_media`. URLs
+ausentes permanecem nulas e nunca são construídas artificialmente.
+
 ## Conteúdo
 
 O catálogo reúne cadastro, espécie, descrição, geração, unidades normalizadas, flags, tipos,

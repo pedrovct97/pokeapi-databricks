@@ -54,14 +54,26 @@ Uma linha por Pokémon, movimento, método e nível dentro de `scarlet-violet`. 
 método e nível para preservar as diferentes formas de aprendizado. Esta tabela impede que o motor
 recomende movimentos indisponíveis no ruleset.
 
+### `fact_pokemon_matchup`
+
+Uma linha direcional por atacante e defensor elegíveis no movepool, excluindo o autoconfronto.
+Para cada lado, seleciona o movimento de dano com maior valor esperado e calcula stats neutros no
+nível 50. O dano baseline usa o fator de nível, poder, ataque/defesa física ou especial, STAB,
+produto da efetividade dos tipos e fator aleatório médio `0.925`.
+
+`attacker_win_probability` é uma transformação logística do score determinístico. Ela é um label
+sintético para validação e futuro experimento de ML; não representa frequência observada em
+batalhas reais. A tabela registra movimento, multiplicadores, dano, percentual de HP, turnos para
+KO, ordem esperada, vencedor e justificativa.
+
 ## Qualidade e linhagem
 
 Cada produto possui DDL, staging, `MERGE` idempotente e consulta de qualidade. `_gold_runs`
 registra uma linha por produto e execução. Nulos técnicos, faixas inválidas ou chaves duplicadas
 fazem a task falhar.
 
-O job `gold_transformation` executa `pokemon_catalog` primeiro e, após sucesso, publica os quatro
-produtos de batalha.
+O job `gold_transformation` executa `dim_pokemon` primeiro e, após sucesso, publica os produtos de
+batalha.
 
 ## Modelo dimensional e compatibilidade
 
@@ -98,7 +110,12 @@ ORDER BY pokemon_id;
 
 SELECT COUNT(*) AS move_pool_rows, COUNT(DISTINCT pokemon_id) AS pokemon
 FROM workspace.pokeapi_gold_dev.bridge_pokemon_move;
+
+SELECT attacker_pokemon_id, defender_pokemon_id, attacker_best_move_name,
+ attacker_win_probability, predicted_winner_key, prediction_reason
+FROM workspace.pokeapi_gold_dev.fact_pokemon_matchup
+WHERE attacker_pokemon_id=25 AND defender_pokemon_id=6;
 ```
 
-Somente após essa reconciliação serão materializados o ranking par-a-par de counters e as regras
-versionadas de itens e habilidades.
+O notebook `notebooks/pokemon_matchup_dashboard.py` fornece seletores, imagens e a explicação do
+baseline. O treinamento de ML só deve começar depois da reconciliação deste fato no Databricks.

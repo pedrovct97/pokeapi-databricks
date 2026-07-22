@@ -25,6 +25,31 @@ Antes de editar:
 4. Avalie riscos de compatibilidade, seguranca, privacidade e perda de dados.
 5. Para tarefas complexas, apresente ou mantenha um plano curto e atualizavel.
 
+## Loop obrigatorio para agentes
+
+Para qualquer alteracao no repositorio, preserve todas as regras existentes deste arquivo e siga o ciclo:
+
+1. Observar:
+   - colete contexto suficiente antes de alterar;
+   - leia os arquivos relevantes;
+   - verifique `git status` e diferencie mudancas suas de mudancas preexistentes;
+   - confirme o estado atual de testes, dados ou pipeline quando isso afetar a decisao.
+2. Decidir:
+   - escolha a menor mudanca capaz de atender ao objetivo;
+   - selecione ferramentas e comandos apropriados;
+   - explicite suposicoes, riscos e criterios de verificacao quando relevantes;
+   - nao rebaixe restricoes de seguranca, qualidade, dados ou operacao ja definidas neste documento.
+3. Agir:
+   - altere somente os arquivos necessarios;
+   - preserve arquitetura, convencoes e alteracoes existentes;
+   - nao faca commit, push, deploy, migracao destrutiva ou execucao remota sem autorizacao explicita;
+   - registre claramente comandos executados quando eles afetarem o projeto.
+4. Verificar:
+   - execute primeiro testes/validacoes locais proximos da mudanca e depois a suite relevante;
+   - para dados, valide schema, qualidade, reconciliacao e idempotencia quando aplicavel;
+   - compare o resultado com o objetivo e os criterios de aceite;
+   - reporte verificacoes executadas, verificacoes pendentes e riscos restantes.
+
 ## Engenharia de software
 
 - Respeite separacao de responsabilidades e interfaces existentes.

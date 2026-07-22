@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS {{table}} (
   run_id STRING NOT NULL COMMENT 'UUID da execução',
   endpoint STRING NOT NULL COMMENT 'Endpoint processado',
-  started_at TIMESTAMP NOT NULL COMMENT 'Início UTC do processamento do endpoint',
-  finished_at TIMESTAMP NOT NULL COMMENT 'Fim UTC do processamento do endpoint',
+  started_at TIMESTAMP NOT NULL COMMENT 'Início horário de Brasília (UTC-3) do processamento do endpoint',
+  finished_at TIMESTAMP NOT NULL COMMENT 'Fim horário de Brasília (UTC-3) do processamento do endpoint',
   status STRING NOT NULL COMMENT 'RUNNING, SUCCESS, PARTIAL ou FAILED',
   discovered_count BIGINT NOT NULL COMMENT 'Quantidade de URLs descobertas',
   list_count BIGINT NOT NULL COMMENT 'Quantidade anunciada pelo endpoint de lista',

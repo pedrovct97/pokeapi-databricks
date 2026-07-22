@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS {{table}} (
   silver_run_id STRING NOT NULL COMMENT 'UUID da execução Silver',
   entity STRING NOT NULL COMMENT 'Entidade processada',
-  started_at TIMESTAMP NOT NULL COMMENT 'Início UTC da transformação',
-  finished_at TIMESTAMP NOT NULL COMMENT 'Fim UTC ou último checkpoint',
+  started_at TIMESTAMP NOT NULL COMMENT 'Início horário de Brasília (UTC-3) da transformação',
+  finished_at TIMESTAMP NOT NULL COMMENT 'Fim horário de Brasília (UTC-3) ou último checkpoint',
   status STRING NOT NULL COMMENT 'RUNNING, SUCCESS ou FAILED',
   source_count BIGINT NOT NULL COMMENT 'Versões atuais encontradas na Bronze',
   valid_count BIGINT NOT NULL COMMENT 'Registros aprovados para publicação',

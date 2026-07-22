@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS {{table}} (
   attempt_count INT NOT NULL COMMENT 'Quantidade de tentativas realizadas',
   duration_ms BIGINT NOT NULL COMMENT 'Duração total das tentativas em milissegundos',
   is_retriable BOOLEAN NOT NULL COMMENT 'Indica se a categoria da falha permite retry',
-  attempted_at TIMESTAMP NOT NULL COMMENT 'Timestamp UTC da tentativa',
+  attempted_at TIMESTAMP NOT NULL COMMENT 'Timestamp horário de Brasília (UTC-3) da tentativa',
   run_id STRING NOT NULL COMMENT 'UUID da execução'
 )
 USING DELTA

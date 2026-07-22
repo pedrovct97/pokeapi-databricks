@@ -22,13 +22,16 @@ SELECT CONCAT_WS('|','pokemon',CAST(p.pokemon_id AS STRING)) pokemon_key,
  p.pokemon_id,COALESCE(english.localized_name,p.pokemon_name) localized_name,
  p.pokemon_name canonical_name,p.species_id,english.genus,english.flavor_text description,
  ps.generation_id,ps.generation_name,p.height_m,p.weight_kg,p.base_experience,p.is_default,
- ps.is_baby,ps.is_legendary,ps.is_mythical,lt.types,st.stats,la.abilities,
+ ps.is_baby,ps.is_legendary,ps.is_mythical,media.official_artwork_url,
+ media.official_artwork_shiny_url,media.sprite_url,media.sprite_shiny_url,
+ lt.types,st.stats,la.abilities,
  GREATEST(p.source_observed_at,ps.source_observed_at) source_max_observed_at,
  CURRENT_TIMESTAMP() gold_transformed_at,{{run_id}} gold_run_id
 FROM {{pokemon}} p
 LEFT JOIN {{pokemon_species}} ps ON ps.species_id=p.species_id
 LEFT JOIN {{pokemon_species_translation}} english
  ON english.species_id=p.species_id AND english.language_code='en'
+LEFT JOIN {{pokemon_media}} media ON media.pokemon_id=p.pokemon_id
 LEFT JOIN localized_types lt ON lt.pokemon_id=p.pokemon_id
 LEFT JOIN aggregated_stats st ON st.pokemon_id=p.pokemon_id
 LEFT JOIN localized_abilities la ON la.pokemon_id=p.pokemon_id

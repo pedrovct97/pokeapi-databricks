@@ -13,6 +13,7 @@ def test_gold_stage_uses_pipe_delimited_deterministic_key() -> None:
             "pokemon_stat",
             "pokemon_ability",
             "ability_translation",
+            "pokemon_media",
         )
     }
     query = sql_query(
@@ -25,6 +26,7 @@ def test_gold_stage_uses_pipe_delimited_deterministic_key() -> None:
     assert "language_code='en'" in query
     assert "CROSS JOIN" not in query
     assert "WHERE la.abilities IS NOT NULL" in query
+    assert "official_artwork_url" in query
 
 
 def test_gold_catalog_has_complete_sql_contract() -> None:

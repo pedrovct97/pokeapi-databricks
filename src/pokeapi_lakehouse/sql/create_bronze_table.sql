@@ -6,13 +6,13 @@ CREATE TABLE IF NOT EXISTS {{table}} (
   http_status INT NOT NULL COMMENT 'Status HTTP observado na coleta',
   payload_json STRING NOT NULL COMMENT 'Resposta JSON integral, sem regras de negócio',
   payload_sha256 STRING NOT NULL COMMENT 'Hash SHA-256 usado para versão e idempotência',
-  source_observed_at TIMESTAMP NOT NULL COMMENT 'Timestamp UTC de recebimento da resposta',
+  source_observed_at TIMESTAMP NOT NULL COMMENT 'Timestamp horário de Brasília (UTC-3) de recebimento da resposta',
   response_bytes BIGINT NOT NULL COMMENT 'Tamanho da resposta HTTP em bytes',
   duration_ms BIGINT NOT NULL COMMENT 'Duração total da requisição em milissegundos',
   attempt_count INT NOT NULL COMMENT 'Quantidade de tentativas da requisição',
   etag STRING COMMENT 'ETag retornado pela fonte, quando disponível',
   last_modified STRING COMMENT 'Last-Modified retornado pela fonte, quando disponível',
-  ingested_at TIMESTAMP NOT NULL COMMENT 'Timestamp UTC de formação do lote Bronze',
+  ingested_at TIMESTAMP NOT NULL COMMENT 'Timestamp horário de Brasília (UTC-3) de formação do lote Bronze',
   run_id STRING NOT NULL COMMENT 'UUID da execução de ingestão'
 )
 USING DELTA

@@ -5,12 +5,12 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from typing import Any
 
 from pokeapi_lakehouse import __version__
 from pokeapi_lakehouse.gold import _upsert_run, replace_with_compatibility_view
 from pokeapi_lakehouse.sql_queries import sql_query
+from pokeapi_lakehouse.time_utils import configure_brasilia_timezone, now_brasilia
 
 
 @dataclass(frozen=True)
@@ -44,6 +44,18 @@ BATTLE_PRODUCTS = (
         "pokemon_move_pool",
         ("pokemon_move", "battle_move", "pokemon_catalog"),
     ),
+    BattleProduct(
+        "fact_pokemon_matchup",
+        "pokemon_matchup",
+        None,
+        (
+            "dim_pokemon",
+            "fact_pokemon_battle_stats",
+            "bridge_pokemon_move",
+            "pokemon_type",
+            "type_damage_relation",
+        ),
+    ),
 )
 
 
@@ -54,10 +66,10 @@ def transform_battle_gold(spark: Any, catalog: str, silver_schema: str, gold_sch
     gold = f"{catalog}.{gold_schema}"
     runs_table = f"{gold}._gold_runs"
     failures: list[str] = []
-    spark.conf.set("spark.sql.session.timeZone", "UTC")
+    configure_brasilia_timezone(spark)
 
     for product in BATTLE_PRODUCTS:
-        started_at = datetime.now(UTC)
+        started_at = now_brasilia()
         started_clock = time.perf_counter()
         row: dict[str, Any] = {
             "gold_run_id": run_id,
@@ -75,9 +87,13 @@ def transform_battle_gold(spark: Any, catalog: str, silver_schema: str, gold_sch
             target = f"{gold}.{product.name}"
             gold_sources = {"pokemon_catalog": "dim_pokemon", "battle_move": "dim_move"}
             identifiers = {
-                source: f"{gold}.{gold_sources[source]}"
-                if source in gold_sources
-                else f"{silver}.{source}"
+                source: (
+                    f"{gold}.{gold_sources[source]}"
+                    if source in gold_sources
+                    else f"{gold}.{source}"
+                    if source.startswith(("dim_", "fact_", "bridge_"))
+                    else f"{silver}.{source}"
+                )
                 for source in product.sources
             }
             spark.sql(sql_query(f"create_gold_{product.query_name}", table=target))
@@ -107,7 +123,7 @@ def transform_battle_gold(spark: Any, catalog: str, silver_schema: str, gold_sch
                     f"duplicatas={quality.duplicate_count if quality else 'n/a'}"
                 )
             row.update(
-                finished_at=datetime.now(UTC),
+                finished_at=now_brasilia(),
                 status="SUCCESS",
                 published_count=spark.table(target).count(),
                 duration_ms=round((time.perf_counter() - started_clock) * 1000),
@@ -115,7 +131,7 @@ def transform_battle_gold(spark: Any, catalog: str, silver_schema: str, gold_sch
         except Exception as exc:
             failures.append(product.name)
             row.update(
-                finished_at=datetime.now(UTC),
+                finished_at=now_brasilia(),
                 status="FAILED",
                 duration_ms=round((time.perf_counter() - started_clock) * 1000),
                 error_message=f"{type(exc).__name__}: {exc}"[:1000],
