@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS {{table}} (
  matchup_key STRING NOT NULL COMMENT 'Chave canônica do confronto entre tipo atacante e tipo defensor',
  ruleset_key STRING NOT NULL COMMENT 'Chave do ruleset aplicado à matriz de efetividade',
+ ruleset_id STRING NOT NULL COMMENT 'Identificador legível do ruleset aplicado à matriz de efetividade',
+ battle_level INT NOT NULL COMMENT 'Nível de batalha do ruleset associado à matriz de efetividade',
  attacking_type_key STRING NOT NULL COMMENT 'Chave canônica do tipo atacante',
  attacking_type_id BIGINT NOT NULL COMMENT 'Identificador PokéAPI do tipo atacante',
  attacking_type_name STRING NOT NULL COMMENT 'Nome em inglês do tipo atacante',

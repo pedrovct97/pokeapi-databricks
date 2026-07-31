@@ -2,12 +2,15 @@
 
 ## Ruleset
 
-Todos os produtos desta fase usam o identificador
-`scarlet-violet|singles|level-50|v1`:
+Os produtos de batalha usam rulesets derivados do grupo de versão e do nível de batalha:
 
-- jogos Scarlet/Violet;
+```txt
+ruleset|<version_group_name>|singles|level-<battle_level>|v1
+```
+
+- todos os `version_group_name` disponíveis em `dim_version_group`;
 - batalha individual 1v1;
-- nível 50;
+- níveis publicados `50`, `80` e `100`;
 - IV 31;
 - EVs e nature neutros;
 - sem terastalização, clima, terreno ou condições de status.
@@ -50,16 +53,18 @@ fórmula oficial completa de dano e não considera STAB, defesa, efeitos, priori
 
 ### `bridge_pokemon_move`
 
-Uma linha por Pokémon, movimento, método e nível dentro de `scarlet-violet`. A chave também inclui
-método e nível para preservar as diferentes formas de aprendizado. Esta tabela impede que o motor
-recomende movimentos indisponíveis no ruleset.
+Uma linha por Pokémon, movimento, método, nível de aprendizado, grupo de versão e nível de batalha.
+A chave inclui `version_group_name`, formato singles, `battle_level`, movimento, método e nível para
+preservar as diferentes formas de aprendizado. Esta tabela impede que o motor recomende movimentos
+indisponíveis no ruleset escolhido.
 
 ### `fact_pokemon_matchup`
 
-Uma linha direcional por atacante e defensor elegíveis no movepool, excluindo o autoconfronto.
-Para cada lado, seleciona o movimento de dano com maior valor esperado e calcula stats neutros no
-nível 50. O dano baseline usa o fator de nível, poder, ataque/defesa física ou especial, STAB,
-produto da efetividade dos tipos e fator aleatório médio `0.925`.
+Uma linha direcional por jogo/versão, nível de batalha, atacante e defensor elegíveis no movepool,
+excluindo o autoconfronto. Para cada lado, seleciona o movimento de dano com maior valor esperado e
+calcula stats neutros nos níveis publicados (`50`, `80` e `100`). O dano baseline usa o fator de
+nível, poder, ataque/defesa física ou especial, STAB, produto da efetividade dos tipos e fator
+aleatório médio `0.925`.
 
 `attacker_win_probability` é uma transformação logística do score determinístico. Ela é um label
 sintético para validação e futuro experimento de ML; não representa frequência observada em
@@ -72,7 +77,10 @@ Principais colunas documentadas no Unity Catalog:
 
 | Coluna | Semântica |
 |---|---|
-| `matchup_key` | Chave direcional do confronto no formato `matchup|ruleset|attacker_id|defender_id`. |
+| `matchup_key` | Chave direcional no formato `matchup|version_name|ruleset_id|attacker_id|defender_id`. |
+| `version_name` / `game_version_display_name` | Jogo/versão usado como filtro principal do dashboard. |
+| `version_group_name` | Grupo de versão usado para regras e disponibilidade de golpes. |
+| `battle_level` | Nível de batalha do cálculo (`50`, `80` ou `100`). |
 | `attacker_*` | Métricas calculadas do melhor movimento do Pokémon atacante contra o defensor. |
 | `defender_*` | Métricas calculadas do melhor movimento do defensor contra o atacante. |
 | `*_type_multiplier` | Efetividade combinada do tipo do movimento contra os tipos do alvo. |
@@ -90,8 +98,42 @@ Cada produto possui DDL, staging, `MERGE` idempotente e consulta de qualidade. `
 registra uma linha por produto e execução. Nulos técnicos, faixas inválidas ou chaves duplicadas
 fazem a task falhar.
 
-O job `gold_transformation` executa `dim_pokemon` primeiro e, após sucesso, publica os produtos de
-batalha.
+Para `fact_pokemon_matchup`, o DDL da tabela continua centralizado, mas os SQLs de staging,
+`MERGE` e qualidade são apenas os particionados por `version_group_name` ou
+`version_group_name|battle_level`. O caminho full/global foi removido para evitar uma rota pesada
+não usada pelo job atual.
+
+O job `gold_transformation` separa a fundação Gold do fato pesado de matchup:
+
+1. `publish_gold_products` publica contexto de jogo, `dim_pokemon` e produtos de batalha menores.
+2. `publish_matchup_partitions` usa `for_each_task` para calcular `fact_pokemon_matchup` com
+   estratégia híbrida de partições:
+   - grupos leves usam uma entrada `version_group_name` e cada task calcula os níveis `50`, `80` e
+     `100` do grupo;
+   - grupos pesados usam entradas `version_group_name|battle_level`, reduzindo o tamanho de cada
+     task sem remover `battle_level` da fact ou da chave via `ruleset_id`.
+
+Spark distribui cada partição em tasks nos executors disponíveis; o job não fixa literalmente “um
+worker por partição Delta”. A estratégia híbrida evita um único DAG global com todos os pares
+atacante/defensor, preserva menos overhead que particionar tudo por nível e quebra os maiores grupos
+para reduzir stragglers.
+
+Grupos inicialmente splitados por nível por serem mais pesados nos testes de performance:
+
+- `ultra-sun-ultra-moon`;
+- `sun-moon`;
+- `scarlet-violet`;
+- `omega-ruby-alpha-sapphire`;
+- `x-y`;
+- `sword-shield`;
+- `black-2-white-2`;
+- `black-white`;
+- `heartgold-soulsilver`;
+- `diamond-pearl`.
+
+O parâmetro `matchup_partitions` lista os grupos de versão com movepool disponível no ambiente atual.
+Se a Silver passar a publicar golpes para novos grupos, essa lista deve ser atualizada ou substituída
+por geração dinâmica antes do run.
 
 ## Modelo dimensional e compatibilidade
 
@@ -132,7 +174,10 @@ FROM workspace.pokeapi_gold_dev.bridge_pokemon_move;
 SELECT attacker_pokemon_id, defender_pokemon_id, attacker_best_move_name,
  attacker_win_probability, predicted_winner_key, prediction_reason
 FROM workspace.pokeapi_gold_dev.fact_pokemon_matchup
-WHERE attacker_pokemon_id=25 AND defender_pokemon_id=6;
+WHERE version_name='scarlet'
+ AND battle_level=50
+ AND attacker_pokemon_id=25
+ AND defender_pokemon_id=6;
 ```
 
 O notebook `notebooks/pokemon_matchup_dashboard.py` fornece seletores, imagens e a explicação do

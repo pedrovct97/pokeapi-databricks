@@ -23,12 +23,14 @@ WITH stats AS (
   SORT_ARRAY(FILTER(COLLECT_LIST(NAMED_STRUCT('type_id',type_id,'name',type_name,'multiplier',multiplier)),x->x.multiplier=0.0)) immunities
  FROM combined GROUP BY pokemon_id
 )
-SELECT CONCAT_WS('|','battle-stats','scarlet-violet','singles','level-50','v1',
- CAST(p.pokemon_id AS STRING)) pokemon_battle_stats_key,
- 'ruleset|scarlet-violet|singles|level-50|v1' ruleset_key,
+SELECT CONCAT_WS('|','battle-stats',r.ruleset_id,CAST(p.pokemon_id AS STRING)) pokemon_battle_stats_key,
+ r.ruleset_key,
+ r.ruleset_id,
+ r.level battle_level,
  p.pokemon_key,p.pokemon_id,p.localized_name pokemon_name,s.hp,s.attack,s.defense,
  s.special_attack,s.special_defense,s.speed,s.base_stat_total,
  CASE WHEN s.attack>=s.special_attack THEN 'physical' ELSE 'special' END primary_offense,
  m.weaknesses,m.resistances,m.immunities,CURRENT_TIMESTAMP() gold_transformed_at,{{run_id}} gold_run_id
 FROM {{pokemon_catalog}} p JOIN stats s ON s.pokemon_id=p.pokemon_id
 JOIN matchups m ON m.pokemon_id=p.pokemon_id
+CROSS JOIN {{dim_ruleset}} r

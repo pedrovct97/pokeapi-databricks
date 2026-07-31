@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS {{table}} (
  level_learned_at INT NOT NULL COMMENT 'Nível de aprendizado do movimento; zero quando não se aplica',
  ruleset_key STRING NOT NULL COMMENT 'Chave canônica do ruleset que filtra a disponibilidade do movimento',
  ruleset_id STRING NOT NULL COMMENT 'Identificador do ruleset que filtra a disponibilidade do movimento',
+ battle_level INT NOT NULL COMMENT 'Nível de batalha do ruleset usado para cálculos derivados',
  gold_transformed_at TIMESTAMP NOT NULL COMMENT 'Momento horário de Brasília (UTC-3) da publicação Gold',
  gold_run_id STRING NOT NULL COMMENT 'UUID da execução Gold responsável pela publicação'
 ) USING DELTA CLUSTER BY (pokemon_id,move_id)

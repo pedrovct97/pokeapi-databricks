@@ -1,6 +1,14 @@
 CREATE TABLE IF NOT EXISTS {{table}} (
- matchup_key STRING NOT NULL COMMENT 'Chave direcional do confronto no formato matchup|ruleset|attacker_id|defender_id',
+ matchup_key STRING NOT NULL COMMENT 'Chave direcional do confronto no formato matchup|game_version|ruleset|attacker_id|defender_id',
  ruleset_key STRING NOT NULL COMMENT 'Chave do ruleset aplicado ao cálculo do confronto',
+ ruleset_id STRING NOT NULL COMMENT 'Identificador legível do ruleset aplicado ao cálculo do confronto',
+ battle_level INT NOT NULL COMMENT 'Nível de batalha usado nos cálculos de stats, dano e turnos para KO',
+ game_version_key STRING NOT NULL COMMENT 'Chave canônica do jogo/versão usado como filtro de contexto no dashboard',
+ version_id BIGINT NOT NULL COMMENT 'Identificador PokéAPI do jogo/versão usado no contexto do confronto',
+ version_name STRING NOT NULL COMMENT 'Nome técnico do jogo/versão usado no contexto do confronto',
+ game_version_display_name STRING NOT NULL COMMENT 'Nome amigável do jogo/versão exibido no dashboard',
+ version_group_key STRING NOT NULL COMMENT 'Chave canônica do grupo de versão associado ao ruleset do confronto',
+ version_group_name STRING NOT NULL COMMENT 'Nome técnico do grupo de versão associado ao ruleset do confronto',
  attacker_pokemon_key STRING NOT NULL COMMENT 'Chave canônica do Pokémon atacante',
  attacker_pokemon_id BIGINT NOT NULL COMMENT 'Identificador PokéAPI do Pokémon atacante',
  defender_pokemon_key STRING NOT NULL COMMENT 'Chave canônica do Pokémon defensor',
@@ -26,5 +34,5 @@ CREATE TABLE IF NOT EXISTS {{table}} (
  prediction_reason STRING NOT NULL COMMENT 'Justificativa auditável com melhor movimento, efetividade, turnos e imunidades',
  gold_transformed_at TIMESTAMP NOT NULL COMMENT 'Momento horário de Brasília (UTC-3) da publicação Gold',
  gold_run_id STRING NOT NULL COMMENT 'UUID da execução Gold responsável pela publicação'
-) USING DELTA CLUSTER BY (attacker_pokemon_id,defender_pokemon_id)
-COMMENT 'Baseline determinístico direcional de confrontos Scarlet/Violet singles nível 50'
+) USING DELTA PARTITIONED BY (version_name,battle_level)
+COMMENT 'Baseline determinístico direcional de confrontos por jogo, version group e nível de batalha'

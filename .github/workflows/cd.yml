@@ -1,0 +1,63 @@
+name: CD Databricks
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: databricks-development
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Validar e implantar bundle
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: development
+    env:
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+    steps:
+      - name: Checkout da revisão aprovada pelo CI
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Configurar Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar ferramentas de build
+        run: python -m pip install --disable-pip-version-check "setuptools>=70" "wheel>=0.44,<1"
+
+      - name: Construir wheel
+        run: python -m pip wheel . --no-deps --no-build-isolation --no-cache-dir --wheel-dir .artifacts
+
+      - name: Configurar Databricks CLI
+        uses: databricks/setup-cli@d268e8b0d8f5d8cc0e743697fe702c9f8c53c950 # v0.299.2
+
+      - name: Validar autenticação
+        run: databricks current-user me
+
+      - name: Validar bundle
+        run: databricks bundle validate -t dev
+
+      - name: Implantar no ambiente development
+        run: databricks bundle deploy -t dev

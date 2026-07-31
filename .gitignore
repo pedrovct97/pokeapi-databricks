@@ -1,8 +1,10 @@
 .databricks/
+.databricks-ai-tools/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
 .agents/
+.hermes/
 .venv/
 __pycache__/
 *.py[cod]

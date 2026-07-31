@@ -106,6 +106,11 @@ Para qualquer alteracao no repositorio, preserve todas as regras existentes dest
 - Deploy: exige autorizacao explicita.
 - Pipeline de dados: sera definido na Fase 1.
 
+Observacao: `.hermes/` contem configuracoes, hooks e skills de apoio ao
+desenvolvimento com Hermes/Databricks e deve ser preservada. O lint global usa as
+exclusoes do `pyproject.toml` para nao tratar essas skills e artefatos gerados como
+codigo Python do produto.
+
 ## Definicao de pronto
 
 Uma tarefa esta concluida somente quando comportamento, criterios de aceite, testes, qualidade de dados, revisao do diff e documentacao aplicaveis estiverem verificados. Riscos e verificacoes nao executadas devem ser comunicados.

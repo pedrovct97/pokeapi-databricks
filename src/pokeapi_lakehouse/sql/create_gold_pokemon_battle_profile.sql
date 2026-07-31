@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS {{table}} (
  pokemon_battle_stats_key STRING NOT NULL COMMENT 'Chave canônica do perfil de batalha do Pokémon no ruleset',
  ruleset_key STRING NOT NULL COMMENT 'Chave do ruleset aplicado ao perfil de batalha',
+ ruleset_id STRING NOT NULL COMMENT 'Identificador legível do ruleset aplicado ao perfil de batalha',
+ battle_level INT NOT NULL COMMENT 'Nível de batalha do ruleset associado ao perfil',
  pokemon_key STRING NOT NULL COMMENT 'Chave canônica do Pokémon',
  pokemon_id BIGINT NOT NULL COMMENT 'Identificador PokéAPI do Pokémon',
  pokemon_name STRING NOT NULL COMMENT 'Nome em inglês do Pokémon',

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pokeapi-lakehouse"
-version = "0.9.5"
+version = "0.9.14"
 description = "Pipeline Lakehouse da PokéAPI para Databricks Free Edition"
 requires-python = ">=3.11"
 dependencies = []
@@ -13,12 +13,17 @@ dependencies = []
 bronze_ingestion = "pokeapi_lakehouse.cli:main"
 silver_transform = "pokeapi_lakehouse.silver_cli:main"
 gold_transform = "pokeapi_lakehouse.gold_cli:main"
-battle_transform = "pokeapi_lakehouse.battle_cli:main"
+matchup_transform = "pokeapi_lakehouse.matchup_cli:main"
 
 [project.optional-dependencies]
 dev = [
+  "bandit>=1.8,<2",
+  "great-expectations>=1.19,<2",
   "mypy>=1.10,<2",
+  "pandas>=2.2,<3",
+  "pip-audit>=2.9,<3",
   "pytest>=8,<9",
+  "pytest-cov>=6,<8",
   "ruff>=0.5,<1",
   "wheel>=0.44,<1",
 ]
@@ -39,6 +44,11 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = [
+  ".artifacts",
+  ".databricks-ai-tools",
+  ".hermes",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

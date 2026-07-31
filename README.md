@@ -50,3 +50,13 @@ databricks bundle validate -t dev -p pokeapi-free
 ```
 
 Deploy e execução remota exigem autorização explícita.
+
+## Ferramentas de AI do projeto
+
+A pasta `.hermes/` concentra configurações, hooks e skills de apoio ao
+desenvolvimento com Hermes e Databricks. Ela deve ser preservada como material ativo
+do projeto.
+
+O snapshot bruto `.databricks-ai-tools/` não é necessário no repositório quando as
+skills úteis já estão organizadas em `.hermes/`; por isso ele fica ignorado para evitar
+duplicidade e ruído em lint/testes.

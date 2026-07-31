@@ -74,17 +74,21 @@ resources:
 
     gold_transformation:
       name: pokeapi-gold-transformation-${bundle.target}
-      description: Publica o catálogo Gold em inglês de Pokémon para SQL e futura API web.
+      description: Publica contexto/catálogo/fundação Gold e calcula matchup em workers por partição.
       max_concurrent_runs: 1
       parameters:
         - name: catalog
           default: ${var.catalog}
+        - name: bronze_schema
+          default: ${var.bronze_schema}
         - name: silver_schema
           default: ${var.silver_schema}
         - name: gold_schema
           default: ${var.gold_schema}
+        - name: matchup_partitions
+          default: '["red-blue","yellow","gold-silver","crystal","ruby-sapphire","emerald","firered-leafgreen","diamond-pearl|50","diamond-pearl|80","diamond-pearl|100","platinum","heartgold-soulsilver|50","heartgold-soulsilver|80","heartgold-soulsilver|100","black-white|50","black-white|80","black-white|100","colosseum","xd","black-2-white-2|50","black-2-white-2|80","black-2-white-2|100","x-y|50","x-y|80","x-y|100","omega-ruby-alpha-sapphire|50","omega-ruby-alpha-sapphire|80","omega-ruby-alpha-sapphire|100","sun-moon|50","sun-moon|80","sun-moon|100","ultra-sun-ultra-moon|50","ultra-sun-ultra-moon|80","ultra-sun-ultra-moon|100","lets-go-pikachu-lets-go-eevee","sword-shield|50","sword-shield|80","sword-shield|100","brilliant-diamond-shining-pearl","legends-arceus","scarlet-violet|50","scarlet-violet|80","scarlet-violet|100","red-green-japan","blue-japan","champions"]'
       tasks:
-        - task_key: publish_pokemon_catalog
+        - task_key: publish_gold_products
           environment_key: default
           timeout_seconds: 3600
           max_retries: 1
@@ -95,27 +99,37 @@ resources:
             parameters:
               - --catalog
               - "{{job.parameters.catalog}}"
+              - --bronze-schema
+              - "{{job.parameters.bronze_schema}}"
               - --silver-schema
               - "{{job.parameters.silver_schema}}"
               - --gold-schema
               - "{{job.parameters.gold_schema}}"
-        - task_key: publish_battle_foundation
+        - task_key: publish_matchup_partitions
           depends_on:
-            - task_key: publish_pokemon_catalog
-          environment_key: default
-          timeout_seconds: 7200
-          max_retries: 1
-          min_retry_interval_millis: 60000
-          python_wheel_task:
-            package_name: pokeapi_lakehouse
-            entry_point: battle_transform
-            parameters:
-              - --catalog
-              - "{{job.parameters.catalog}}"
-              - --silver-schema
-              - "{{job.parameters.silver_schema}}"
-              - --gold-schema
-              - "{{job.parameters.gold_schema}}"
+            - task_key: publish_gold_products
+          for_each_task:
+            inputs: "{{job.parameters.matchup_partitions}}"
+            concurrency: 6
+            task:
+              task_key: publish_matchup_partition
+              environment_key: default
+              timeout_seconds: 10800
+              max_retries: 1
+              min_retry_interval_millis: 60000
+              python_wheel_task:
+              
+                package_name: pokeapi_lakehouse
+                entry_point: matchup_transform
+                parameters:
+                  - --catalog
+                  - "{{job.parameters.catalog}}"
+                  - --silver-schema
+                  - "{{job.parameters.silver_schema}}"
+                  - --gold-schema
+                  - "{{job.parameters.gold_schema}}"
+                  - --partition
+                  - "{{input}}"
       environments:
         - environment_key: default
           spec:
