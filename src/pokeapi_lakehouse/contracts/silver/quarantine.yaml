@@ -1,0 +1,83 @@
+version: 1
+layer: silver
+domain: table
+owner: pokeapi_lakehouse
+logical_name: quarantine
+table: _quarantine
+description: Registros Bronze que não atenderam ao contrato de publicação Silver
+grain: uma linha por registro Bronze rejeitado pelas regras Silver
+primary_key:
+- silver_run_id
+- entity
+- source_url
+- source_payload_sha256
+foreign_keys: []
+partition_by: []
+columns:
+- name: silver_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Silver
+  semantic_role: audit
+- name: entity
+  type: STRING
+  nullable: false
+  description: Entidade Silver rejeitada
+  semantic_role: dimension
+- name: source_url
+  type: STRING
+  nullable: false
+  description: URL do registro Bronze rejeitado
+  semantic_role: lineage
+- name: source_payload_sha256
+  type: STRING
+  nullable: false
+  description: Versão do payload Bronze rejeitado
+  semantic_role: lineage
+- name: validation_errors
+  type: STRING
+  nullable: false
+  description: Regras de qualidade violadas
+  semantic_role: dimension
+- name: quarantined_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da quarentena
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - silver_run_id
+  - entity
+  - source_url
+  - source_payload_sha256
+  - validation_errors
+  - quarantined_at
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - silver_run_id
+  - entity
+  - source_url
+  - source_payload_sha256
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - silver_run_id
+  - entity
+  - source_url
+  - source_payload_sha256
+  severity: error
+- name: validation_errors_not_null
+  type: expect_column_values_to_not_be_null
+  column: validation_errors
+  severity: error
+- name: quarantined_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: quarantined_at
+  severity: error
+sql_templates:
+- sql/silver/create/create_silver_quarantine.sql

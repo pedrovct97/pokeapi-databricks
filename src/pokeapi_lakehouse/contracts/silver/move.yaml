@@ -1,0 +1,169 @@
+version: 1
+layer: silver
+domain: table
+owner: pokeapi_lakehouse
+logical_name: move
+table: move
+description: Cadastro atual tipado de movimentos derivado exclusivamente da Bronze
+grain: uma linha por tabela normalizada Silver em move
+primary_key:
+- move_id
+foreign_keys: []
+partition_by: []
+columns:
+- name: move_id
+  type: BIGINT
+  nullable: false
+  description: Identificador da PokéAPI; chave lógica
+  semantic_role: business_key
+- name: move_name
+  type: STRING
+  nullable: false
+  description: Nome canônico do movimento
+  semantic_role: dimension
+- name: accuracy_pct
+  type: INT
+  nullable: true
+  description: Precisão percentual; nula quando o movimento ignora precisão
+  semantic_role: metric
+- name: effect_chance_pct
+  type: INT
+  nullable: true
+  description: Chance percentual do efeito secundário
+  semantic_role: metric
+- name: pp
+  type: INT
+  nullable: true
+  description: Quantidade base de pontos de poder
+  semantic_role: metric
+- name: priority
+  type: INT
+  nullable: false
+  description: Prioridade de execução do movimento
+  semantic_role: metric
+- name: power
+  type: INT
+  nullable: true
+  description: Poder base; nulo para movimentos sem dano direto
+  semantic_role: metric
+- name: damage_class_id
+  type: BIGINT
+  nullable: true
+  description: Identificador da classe de dano
+  semantic_role: business_key
+- name: damage_class_name
+  type: STRING
+  nullable: true
+  description: physical, special ou status
+  semantic_role: dimension
+- name: type_id
+  type: BIGINT
+  nullable: true
+  description: Identificador do tipo elemental
+  semantic_role: business_key
+- name: type_name
+  type: STRING
+  nullable: true
+  description: Nome do tipo elemental
+  semantic_role: dimension
+- name: generation_id
+  type: BIGINT
+  nullable: true
+  description: Identificador da geração de introdução
+  semantic_role: business_key
+- name: generation_name
+  type: STRING
+  nullable: true
+  description: Nome da geração de introdução
+  semantic_role: dimension
+- name: source_url
+  type: STRING
+  nullable: false
+  description: URL do registro Bronze utilizado
+  semantic_role: lineage
+- name: source_payload_sha256
+  type: STRING
+  nullable: false
+  description: Versão do payload Bronze
+  semantic_role: lineage
+- name: source_observed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da observação na fonte
+  semantic_role: lineage
+- name: silver_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da transformação
+  semantic_role: audit
+- name: silver_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Silver
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - move_id
+  - move_name
+  - accuracy_pct
+  - effect_chance_pct
+  - pp
+  - priority
+  - power
+  - damage_class_id
+  - damage_class_name
+  - type_id
+  - type_name
+  - generation_id
+  - generation_name
+  - source_url
+  - source_payload_sha256
+  - source_observed_at
+  - silver_transformed_at
+  - silver_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - move_id
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - move_id
+  severity: error
+- name: move_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: move_name
+  severity: error
+- name: priority_not_null
+  type: expect_column_values_to_not_be_null
+  column: priority
+  severity: error
+- name: source_url_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_url
+  severity: error
+- name: source_payload_sha256_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_payload_sha256
+  severity: error
+- name: source_observed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_observed_at
+  severity: error
+- name: silver_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: silver_transformed_at
+  severity: error
+- name: silver_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: silver_run_id
+  severity: error
+sql_templates:
+- sql/silver/create/create_silver_move.sql
+- sql/silver/stage/stage_silver_move.sql
+- sql/silver/merge/merge_silver_move.sql
+- sql/silver/quality/quality_silver_move.sql

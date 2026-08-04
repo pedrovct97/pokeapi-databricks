@@ -1,0 +1,149 @@
+version: 1
+layer: gold
+domain: dim
+owner: pokeapi_lakehouse
+logical_name: ruleset
+table: dim_ruleset
+description: Rulesets versionados usados pelos fatos de batalha
+grain: uma linha por entidade conformada em dim_ruleset
+primary_key:
+- ruleset_key
+foreign_keys: []
+partition_by: []
+columns:
+- name: ruleset_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do ruleset de batalha
+  semantic_role: business_key
+- name: ruleset_id
+  type: STRING
+  nullable: false
+  description: Identificador legível do ruleset
+  semantic_role: business_key
+- name: version_group_name
+  type: STRING
+  nullable: false
+  description: Grupo de versão da PokéAPI usado para disponibilidade de movimentos
+  semantic_role: dimension
+- name: battle_format
+  type: STRING
+  nullable: false
+  description: Formato de batalha considerado pelo baseline
+  semantic_role: dimension
+- name: level
+  type: INT
+  nullable: false
+  description: Nível fixo usado nos cálculos de batalha
+  semantic_role: metric
+- name: iv
+  type: INT
+  nullable: false
+  description: Valor de IV assumido para todos os stats
+  semantic_role: metric
+- name: ev_policy
+  type: STRING
+  nullable: false
+  description: Política de EV aplicada pelo ruleset
+  semantic_role: dimension
+- name: nature_policy
+  type: STRING
+  nullable: false
+  description: Política de nature aplicada pelo ruleset
+  semantic_role: dimension
+- name: terastalization_enabled
+  type: BOOLEAN
+  nullable: false
+  description: Indica se terastalização é considerada no baseline
+  semantic_role: dimension
+- name: rule_version
+  type: INT
+  nullable: false
+  description: Versão semântica interna das premissas do ruleset
+  semantic_role: metric
+- name: gold_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da publicação Gold
+  semantic_role: audit
+- name: gold_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Gold responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - ruleset_key
+  - ruleset_id
+  - version_group_name
+  - battle_format
+  - level
+  - iv
+  - ev_policy
+  - nature_policy
+  - terastalization_enabled
+  - rule_version
+  - gold_transformed_at
+  - gold_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - ruleset_key
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - ruleset_key
+  severity: error
+- name: ruleset_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: ruleset_id
+  severity: error
+- name: version_group_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_name
+  severity: error
+- name: battle_format_not_null
+  type: expect_column_values_to_not_be_null
+  column: battle_format
+  severity: error
+- name: level_not_null
+  type: expect_column_values_to_not_be_null
+  column: level
+  severity: error
+- name: iv_not_null
+  type: expect_column_values_to_not_be_null
+  column: iv
+  severity: error
+- name: ev_policy_not_null
+  type: expect_column_values_to_not_be_null
+  column: ev_policy
+  severity: error
+- name: nature_policy_not_null
+  type: expect_column_values_to_not_be_null
+  column: nature_policy
+  severity: error
+- name: terastalization_enabled_not_null
+  type: expect_column_values_to_not_be_null
+  column: terastalization_enabled
+  severity: error
+- name: rule_version_not_null
+  type: expect_column_values_to_not_be_null
+  column: rule_version
+  severity: error
+- name: gold_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_transformed_at
+  severity: error
+- name: gold_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_run_id
+  severity: error
+sql_templates:
+- sql/gold/create/create_gold_ruleset.sql
+- sql/gold/stage/stage_gold_ruleset.sql
+- sql/gold/merge/merge_gold_ruleset.sql
+- sql/gold/quality/quality_gold_ruleset.sql

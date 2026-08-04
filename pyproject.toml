@@ -4,21 +4,29 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pokeapi-lakehouse"
-version = "0.8.0"
+version = "0.9.14"
 description = "Pipeline Lakehouse da PokéAPI para Databricks Free Edition"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+  "PyYAML>=6,<7",
+]
 
 [project.scripts]
 bronze_ingestion = "pokeapi_lakehouse.cli:main"
 silver_transform = "pokeapi_lakehouse.silver_cli:main"
 gold_transform = "pokeapi_lakehouse.gold_cli:main"
-battle_transform = "pokeapi_lakehouse.battle_cli:main"
+matchup_transform = "pokeapi_lakehouse.matchup_cli:main"
+metadata_sync = "pokeapi_lakehouse.metadata_cli:main"
 
 [project.optional-dependencies]
 dev = [
+  "bandit>=1.8,<2",
+  "great-expectations>=1.19,<2",
   "mypy>=1.10,<2",
+  "pandas>=2.2,<3",
+  "pip-audit>=2.9,<3",
   "pytest>=8,<9",
+  "pytest-cov>=6,<8",
   "ruff>=0.5,<1",
   "wheel>=0.44,<1",
 ]
@@ -27,10 +35,7 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-pokeapi_lakehouse = ["sql/*.sql"]
-
-[tool.setuptools.exclude-package-data]
-pokeapi_lakehouse = ["sql/insert_ingestion_runs.sql"]
+pokeapi_lakehouse = ["contracts/**/*.yaml", "sql/**/*.sql"]
 
 [tool.pytest.ini_options]
 addopts = "-ra -p no:cacheprovider"
@@ -39,6 +44,11 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = [
+  ".artifacts",
+  ".databricks-ai-tools",
+  ".hermes",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
@@ -50,4 +60,8 @@ packages = ["pokeapi_lakehouse"]
 
 [[tool.mypy.overrides]]
 module = ["pyspark", "pyspark.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["yaml"]
 ignore_missing_imports = true

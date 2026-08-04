@@ -1,6 +1,33 @@
 """Load reviewed SQL templates shipped inside the ingestion wheel."""
 
+from functools import lru_cache
 from importlib.resources import files
+from importlib.resources.abc import Traversable
+
+
+def _iter_files(root: Traversable) -> list[Traversable]:
+    found: list[Traversable] = []
+    for child in root.iterdir():
+        if child.is_dir():
+            found.extend(_iter_files(child))
+        elif child.is_file():
+            found.append(child)
+    return found
+
+
+@lru_cache(maxsize=1)
+def _query_index() -> dict[str, Traversable]:
+    sql_root = files("pokeapi_lakehouse").joinpath("sql")
+    index: dict[str, Traversable] = {}
+    duplicates: set[str] = set()
+    for path in _iter_files(sql_root):
+        if path.name in index:
+            duplicates.add(path.name)
+        index[path.name] = path
+    if duplicates:
+        duplicate_names = ", ".join(sorted(name.removesuffix(".sql") for name in duplicates))
+        raise ValueError(f"queries SQL duplicadas no pacote: {duplicate_names}")
+    return index
 
 
 def _validate_identifier(value: str) -> str:
@@ -22,7 +49,10 @@ def sql_query(
     """Load a known query and safely bind identifiers and string literals."""
     if not name.replace("_", "").isalnum():
         raise ValueError(f"nome de query inválido: {name}")
-    query_path = files("pokeapi_lakehouse").joinpath("sql", f"{name}.sql")
+    query_filename = f"{name}.sql"
+    query_path = _query_index().get(query_filename)
+    if query_path is None:
+        raise FileNotFoundError(f"query SQL não encontrada: {name}")
     query = query_path.read_text(encoding="utf-8")
     replacements = dict(identifiers or {})
     if table is not None:

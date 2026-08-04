@@ -8,13 +8,14 @@ import re
 import time
 import uuid
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from pokeapi_lakehouse import __version__
 from pokeapi_lakehouse.endpoints import Endpoint
 from pokeapi_lakehouse.pokeapi_client import FetchedResource, FetchFailure, PokeApiClient
 from pokeapi_lakehouse.sql_queries import sql_query
+from pokeapi_lakehouse.time_utils import configure_brasilia_timezone, now_brasilia
 
 _RESOURCE_ID = re.compile(r"/([0-9]+)/?$")
 
@@ -186,10 +187,10 @@ def ingest_endpoints(
     runs_table = f"{full_schema}._ingestion_runs"
     has_failures = False
     failed_endpoints: list[str] = []
-    spark.conf.set("spark.sql.session.timeZone", "UTC")
+    configure_brasilia_timezone(spark)
 
     for endpoint in endpoints:
-        started_at = datetime.now(UTC)
+        started_at = now_brasilia()
         endpoint_started = time.perf_counter()
         run_row: dict[str, Any] = {
             "run_id": run_id,
@@ -210,7 +211,7 @@ def ingest_endpoints(
         _upsert_runs(spark, runs_table, [run_row])
         try:
             result = client.fetch_endpoint(endpoint.name)
-            ingested_at = datetime.now(UTC)
+            ingested_at = now_brasilia()
             rows = [to_bronze_row(resource, run_id, ingested_at) for resource in result.resources]
             validate_bronze_rows(rows)
             inserted_count = _merge_rows(spark, f"{full_schema}.{endpoint.table_name}", rows)
@@ -219,7 +220,7 @@ def ingest_endpoints(
             if result.failures:
                 failed_endpoints.append(endpoint.name)
             run_row.update(
-                finished_at=datetime.now(UTC),
+                finished_at=now_brasilia(),
                 status="PARTIAL" if result.failures else "SUCCESS",
                 discovered_count=result.discovered_count,
                 list_count=result.list_count,
@@ -233,7 +234,7 @@ def ingest_endpoints(
             has_failures = True
             failed_endpoints.append(endpoint.name)
             run_row.update(
-                finished_at=datetime.now(UTC),
+                finished_at=now_brasilia(),
                 status="FAILED",
                 failed_count=1,
                 duration_ms=round((time.perf_counter() - endpoint_started) * 1000),

@@ -22,6 +22,7 @@ def test_all_selects_battle_domain_scope() -> None:
         "pokemon_stat",
         "pokemon_ability",
         "pokemon_move",
+        "pokemon_media",
         "type_damage_relation",
         "language",
         "pokemon_species_translation",

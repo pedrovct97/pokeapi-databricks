@@ -1,0 +1,145 @@
+version: 1
+layer: gold
+domain: dim
+owner: pokeapi_lakehouse
+logical_name: game_version
+table: dim_game_version
+description: Dimensão Gold de jogos e versões para filtros de dashboard e contexto de ruleset
+grain: uma linha por entidade conformada em dim_game_version
+primary_key:
+- version_id
+foreign_keys: []
+partition_by: []
+columns:
+- name: game_version_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do jogo/versão no formato game_version|version_id
+  semantic_role: business_key
+- name: version_id
+  type: BIGINT
+  nullable: false
+  description: Identificador do jogo/versão na PokéAPI
+  semantic_role: business_key
+- name: version_name
+  type: STRING
+  nullable: false
+  description: Nome técnico do jogo/versão, como emerald, yellow, firered ou diamond
+  semantic_role: dimension
+- name: display_name
+  type: STRING
+  nullable: false
+  description: Nome amigável do jogo exibido no dashboard
+  semantic_role: dimension
+- name: version_group_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do grupo de versão associado ao jogo
+  semantic_role: business_key
+- name: version_group_id
+  type: BIGINT
+  nullable: false
+  description: Identificador do grupo de versão associado ao jogo
+  semantic_role: business_key
+- name: version_group_name
+  type: STRING
+  nullable: false
+  description: Nome técnico do grupo de versão associado ao jogo
+  semantic_role: dimension
+- name: generation_id
+  type: BIGINT
+  nullable: false
+  description: Identificador da geração derivada do grupo de versão
+  semantic_role: business_key
+- name: generation_name
+  type: STRING
+  nullable: false
+  description: Nome técnico da geração derivada do grupo de versão
+  semantic_role: dimension
+- name: region_name
+  type: STRING
+  nullable: true
+  description: Nome técnico da região principal da geração quando disponível na PokéAPI
+  semantic_role: dimension
+- name: gold_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da publicação Gold
+  semantic_role: audit
+- name: gold_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Gold responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - game_version_key
+  - version_id
+  - version_name
+  - display_name
+  - version_group_key
+  - version_group_id
+  - version_group_name
+  - generation_id
+  - generation_name
+  - region_name
+  - gold_transformed_at
+  - gold_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - version_id
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - version_id
+  severity: error
+- name: game_version_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: game_version_key
+  severity: error
+- name: version_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_name
+  severity: error
+- name: display_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: display_name
+  severity: error
+- name: version_group_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_key
+  severity: error
+- name: version_group_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_id
+  severity: error
+- name: version_group_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_name
+  severity: error
+- name: generation_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: generation_id
+  severity: error
+- name: generation_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: generation_name
+  severity: error
+- name: gold_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_transformed_at
+  severity: error
+- name: gold_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_run_id
+  severity: error
+sql_templates:
+- sql/gold/create/create_gold_game_version.sql
+- sql/gold/stage/stage_gold_game_version.sql
+- sql/gold/merge/merge_gold_game_version.sql
+- sql/gold/quality/quality_gold_game_version.sql

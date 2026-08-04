@@ -1,0 +1,162 @@
+version: 1
+layer: bronze
+domain: metadata
+owner: pokeapi_lakehouse
+logical_name: ingestion_runs
+table: _ingestion_runs
+description: Reconciliação das execuções de ingestão Bronze por endpoint
+grain: uma linha por endpoint processado em uma execução Bronze
+primary_key:
+- run_id
+- endpoint
+foreign_keys: []
+partition_by: []
+columns:
+- name: run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução
+  semantic_role: audit
+- name: endpoint
+  type: STRING
+  nullable: false
+  description: Endpoint processado
+  semantic_role: dimension
+- name: started_at
+  type: TIMESTAMP
+  nullable: false
+  description: Início horário de Brasília (UTC-3) do processamento do endpoint
+  semantic_role: audit
+- name: finished_at
+  type: TIMESTAMP
+  nullable: false
+  description: Fim horário de Brasília (UTC-3) do processamento do endpoint
+  semantic_role: audit
+- name: status
+  type: STRING
+  nullable: false
+  description: RUNNING, SUCCESS, PARTIAL ou FAILED
+  semantic_role: audit
+- name: discovered_count
+  type: BIGINT
+  nullable: false
+  description: Quantidade de URLs descobertas
+  semantic_role: metric
+- name: list_count
+  type: BIGINT
+  nullable: false
+  description: Quantidade anunciada pelo endpoint de lista
+  semantic_role: metric
+- name: page_count
+  type: BIGINT
+  nullable: false
+  description: Quantidade de páginas percorridas
+  semantic_role: metric
+- name: fetched_count
+  type: BIGINT
+  nullable: false
+  description: Quantidade de respostas válidas
+  semantic_role: metric
+- name: inserted_count
+  type: BIGINT
+  nullable: false
+  description: Quantidade de novas versões inseridas
+  semantic_role: metric
+- name: failed_count
+  type: BIGINT
+  nullable: false
+  description: Quantidade de recursos com falha
+  semantic_role: metric
+- name: duration_ms
+  type: BIGINT
+  nullable: false
+  description: Duração total do endpoint em milissegundos
+  semantic_role: audit
+- name: collector_version
+  type: STRING
+  nullable: false
+  description: Versão do coletor que executou a carga
+  semantic_role: dimension
+- name: error_message
+  type: STRING
+  nullable: true
+  description: Resumo técnico da falha, sem payload
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - run_id
+  - endpoint
+  - started_at
+  - finished_at
+  - status
+  - discovered_count
+  - list_count
+  - page_count
+  - fetched_count
+  - inserted_count
+  - failed_count
+  - duration_ms
+  - collector_version
+  - error_message
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - run_id
+  - endpoint
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - run_id
+  - endpoint
+  severity: error
+- name: started_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: started_at
+  severity: error
+- name: finished_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: finished_at
+  severity: error
+- name: status_not_null
+  type: expect_column_values_to_not_be_null
+  column: status
+  severity: error
+- name: discovered_count_not_null
+  type: expect_column_values_to_not_be_null
+  column: discovered_count
+  severity: error
+- name: list_count_not_null
+  type: expect_column_values_to_not_be_null
+  column: list_count
+  severity: error
+- name: page_count_not_null
+  type: expect_column_values_to_not_be_null
+  column: page_count
+  severity: error
+- name: fetched_count_not_null
+  type: expect_column_values_to_not_be_null
+  column: fetched_count
+  severity: error
+- name: inserted_count_not_null
+  type: expect_column_values_to_not_be_null
+  column: inserted_count
+  severity: error
+- name: failed_count_not_null
+  type: expect_column_values_to_not_be_null
+  column: failed_count
+  severity: error
+- name: duration_ms_not_null
+  type: expect_column_values_to_not_be_null
+  column: duration_ms
+  severity: error
+- name: collector_version_not_null
+  type: expect_column_values_to_not_be_null
+  column: collector_version
+  severity: error
+sql_templates:
+- sql/bronze/create/create_ingestion_runs.sql
+- sql/bronze/merge/merge_ingestion_runs.sql

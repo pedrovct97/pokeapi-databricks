@@ -1,0 +1,168 @@
+version: 1
+layer: gold
+domain: fact
+owner: pokeapi_lakehouse
+logical_name: type_matchup_matrix
+table: fact_type_matchup
+description: Matriz completa de efetividade entre tipos
+grain: uma linha por combinação ofensiva e defensiva de tipos
+primary_key:
+- attacking_type_id
+- defending_type_id
+foreign_keys: []
+partition_by: []
+columns:
+- name: matchup_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do confronto entre tipo atacante e tipo defensor
+  semantic_role: business_key
+- name: ruleset_key
+  type: STRING
+  nullable: false
+  description: Chave do ruleset aplicado à matriz de efetividade
+  semantic_role: business_key
+- name: ruleset_id
+  type: STRING
+  nullable: false
+  description: Identificador legível do ruleset aplicado à matriz de efetividade
+  semantic_role: business_key
+- name: battle_level
+  type: INT
+  nullable: false
+  description: Nível de batalha do ruleset associado à matriz de efetividade
+  semantic_role: metric
+- name: attacking_type_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do tipo atacante
+  semantic_role: business_key
+- name: attacking_type_id
+  type: BIGINT
+  nullable: false
+  description: Identificador PokéAPI do tipo atacante
+  semantic_role: business_key
+- name: attacking_type_name
+  type: STRING
+  nullable: false
+  description: Nome em inglês do tipo atacante
+  semantic_role: dimension
+- name: defending_type_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do tipo defensor
+  semantic_role: business_key
+- name: defending_type_id
+  type: BIGINT
+  nullable: false
+  description: Identificador PokéAPI do tipo defensor
+  semantic_role: business_key
+- name: defending_type_name
+  type: STRING
+  nullable: false
+  description: Nome em inglês do tipo defensor
+  semantic_role: dimension
+- name: damage_multiplier
+  type: DOUBLE
+  nullable: false
+  description: Multiplicador de efetividade do tipo atacante contra o tipo defensor
+  semantic_role: metric
+- name: matchup_class
+  type: STRING
+  nullable: false
+  description: 'Classe semântica da efetividade: immune, resisted, neutral ou super_effective'
+  semantic_role: dimension
+- name: gold_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da publicação Gold
+  semantic_role: audit
+- name: gold_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Gold responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - matchup_key
+  - ruleset_key
+  - ruleset_id
+  - battle_level
+  - attacking_type_key
+  - attacking_type_id
+  - attacking_type_name
+  - defending_type_key
+  - defending_type_id
+  - defending_type_name
+  - damage_multiplier
+  - matchup_class
+  - gold_transformed_at
+  - gold_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - attacking_type_id
+  - defending_type_id
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - attacking_type_id
+  - defending_type_id
+  severity: error
+- name: matchup_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: matchup_key
+  severity: error
+- name: ruleset_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: ruleset_key
+  severity: error
+- name: ruleset_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: ruleset_id
+  severity: error
+- name: battle_level_not_null
+  type: expect_column_values_to_not_be_null
+  column: battle_level
+  severity: error
+- name: attacking_type_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacking_type_key
+  severity: error
+- name: attacking_type_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacking_type_name
+  severity: error
+- name: defending_type_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: defending_type_key
+  severity: error
+- name: defending_type_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: defending_type_name
+  severity: error
+- name: damage_multiplier_not_null
+  type: expect_column_values_to_not_be_null
+  column: damage_multiplier
+  severity: error
+- name: matchup_class_not_null
+  type: expect_column_values_to_not_be_null
+  column: matchup_class
+  severity: error
+- name: gold_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_transformed_at
+  severity: error
+- name: gold_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_run_id
+  severity: error
+sql_templates:
+- sql/gold/create/create_gold_type_matchup_matrix.sql
+- sql/gold/stage/stage_gold_type_matchup_matrix.sql
+- sql/gold/merge/merge_gold_type_matchup_matrix.sql
+- sql/gold/quality/quality_gold_type_matchup_matrix.sql

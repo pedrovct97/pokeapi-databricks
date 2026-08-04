@@ -1,0 +1,143 @@
+version: 1
+layer: gold
+domain: dim
+owner: pokeapi_lakehouse
+logical_name: battle_move
+table: dim_move
+description: Dimensão Gold de movimentos com atributos usados pelo baseline de batalha
+grain: uma linha por entidade conformada em dim_move
+primary_key:
+- move_key
+foreign_keys: []
+partition_by: []
+columns:
+- name: move_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do movimento no formato move|id
+  semantic_role: business_key
+- name: move_id
+  type: BIGINT
+  nullable: false
+  description: Identificador PokéAPI do movimento
+  semantic_role: business_key
+- name: move_name
+  type: STRING
+  nullable: false
+  description: Nome em inglês do movimento
+  semantic_role: dimension
+- name: description
+  type: STRING
+  nullable: true
+  description: Descrição localizada em inglês do efeito do movimento
+  semantic_role: dimension
+- name: damage_class_name
+  type: STRING
+  nullable: true
+  description: 'Classe de dano do movimento: physical, special ou status'
+  semantic_role: dimension
+- name: type_id
+  type: BIGINT
+  nullable: true
+  description: Identificador PokéAPI do tipo elemental do movimento
+  semantic_role: business_key
+- name: type_name
+  type: STRING
+  nullable: true
+  description: Nome em inglês do tipo elemental do movimento
+  semantic_role: dimension
+- name: power
+  type: INT
+  nullable: true
+  description: Poder base do movimento informado pela PokéAPI
+  semantic_role: metric
+- name: accuracy_pct
+  type: INT
+  nullable: true
+  description: Precisão percentual do movimento; nulo quando nunca erra ou não se aplica
+  semantic_role: metric
+- name: expected_power
+  type: DECIMAL(10,2)
+  nullable: true
+  description: Poder esperado simples calculado como power vezes accuracy dividido por 100
+  semantic_role: metric
+- name: priority
+  type: INT
+  nullable: false
+  description: Prioridade de execução do movimento no turno
+  semantic_role: metric
+- name: pp
+  type: INT
+  nullable: true
+  description: Quantidade base de usos do movimento
+  semantic_role: metric
+- name: effect_chance_pct
+  type: INT
+  nullable: true
+  description: Chance percentual do efeito secundário, quando aplicável
+  semantic_role: metric
+- name: gold_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da publicação Gold
+  semantic_role: audit
+- name: gold_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Gold responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - move_key
+  - move_id
+  - move_name
+  - description
+  - damage_class_name
+  - type_id
+  - type_name
+  - power
+  - accuracy_pct
+  - expected_power
+  - priority
+  - pp
+  - effect_chance_pct
+  - gold_transformed_at
+  - gold_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - move_key
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - move_key
+  severity: error
+- name: move_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: move_id
+  severity: error
+- name: move_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: move_name
+  severity: error
+- name: priority_not_null
+  type: expect_column_values_to_not_be_null
+  column: priority
+  severity: error
+- name: gold_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_transformed_at
+  severity: error
+- name: gold_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_run_id
+  severity: error
+sql_templates:
+- sql/gold/create/create_gold_battle_move.sql
+- sql/gold/stage/stage_gold_battle_move.sql
+- sql/gold/merge/merge_gold_battle_move.sql
+- sql/gold/quality/quality_gold_battle_move.sql

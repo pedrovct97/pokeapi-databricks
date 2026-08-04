@@ -10,7 +10,7 @@
 ## Gate 1 — Bronze
 
 - Contrato da fonte registrado com endpoint, parâmetros e versão observada.
-- Payload bruto preservado com `ingested_at` em UTC, URL, status HTTP e identificador da execução.
+- Payload bruto preservado com `ingested_at` em horário de Brasília (UTC-3), URL, status HTTP e identificador da execução.
 - Retry, timeout e falhas parciais tratados.
 - Reexecução idempotente e reconciliação de volume demonstradas.
 - Tabelas e colunas comentadas no Unity Catalog.

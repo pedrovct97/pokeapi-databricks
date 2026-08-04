@@ -1,0 +1,237 @@
+version: 1
+layer: gold
+domain: dim
+owner: pokeapi_lakehouse
+logical_name: pokemon_catalog
+table: dim_pokemon
+description: Catálogo em inglês de Pokémon pronto para SQL e futura API web
+grain: uma linha por entidade conformada em dim_pokemon
+primary_key:
+- pokemon_key
+foreign_keys: []
+partition_by: []
+columns:
+- name: pokemon_key
+  type: STRING
+  nullable: false
+  description: 'PK lógica determinística: pokemon|id'
+  semantic_role: business_key
+- name: pokemon_id
+  type: BIGINT
+  nullable: false
+  description: Identificador do Pokémon
+  semantic_role: business_key
+- name: localized_name
+  type: STRING
+  nullable: false
+  description: Nome oficial em inglês
+  semantic_role: dimension
+- name: canonical_name
+  type: STRING
+  nullable: false
+  description: Nome técnico estável da PokéAPI
+  semantic_role: dimension
+- name: species_id
+  type: BIGINT
+  nullable: true
+  description: Identificador da espécie
+  semantic_role: business_key
+- name: genus
+  type: STRING
+  nullable: true
+  description: Classificação da espécie em inglês
+  semantic_role: dimension
+- name: description
+  type: STRING
+  nullable: true
+  description: Descrição da espécie em inglês
+  semantic_role: dimension
+- name: generation_id
+  type: BIGINT
+  nullable: true
+  description: Geração de origem
+  semantic_role: business_key
+- name: generation_name
+  type: STRING
+  nullable: true
+  description: Nome técnico da geração
+  semantic_role: dimension
+- name: height_m
+  type: DECIMAL(10,2)
+  nullable: false
+  description: Altura em metros
+  semantic_role: metric
+- name: weight_kg
+  type: DECIMAL(10,2)
+  nullable: false
+  description: Peso em quilogramas
+  semantic_role: metric
+- name: base_experience
+  type: BIGINT
+  nullable: true
+  description: Experiência base
+  semantic_role: metric
+- name: is_default
+  type: BOOLEAN
+  nullable: false
+  description: Indica variedade padrão
+  semantic_role: quality
+- name: is_baby
+  type: BOOLEAN
+  nullable: true
+  description: Indica estágio bebê
+  semantic_role: quality
+- name: is_legendary
+  type: BOOLEAN
+  nullable: true
+  description: Indica Pokémon lendário
+  semantic_role: quality
+- name: is_mythical
+  type: BOOLEAN
+  nullable: true
+  description: Indica Pokémon mítico
+  semantic_role: quality
+- name: official_artwork_url
+  type: STRING
+  nullable: true
+  description: Imagem oficial padrão da PokéAPI
+  semantic_role: dimension
+- name: official_artwork_shiny_url
+  type: STRING
+  nullable: true
+  description: Imagem oficial shiny da PokéAPI
+  semantic_role: dimension
+- name: sprite_url
+  type: STRING
+  nullable: true
+  description: Sprite frontal padrão
+  semantic_role: dimension
+- name: sprite_shiny_url
+  type: STRING
+  nullable: true
+  description: Sprite frontal shiny
+  semantic_role: dimension
+- name: types
+  type: ARRAY
+  nullable: false
+  description: Tipos ordenados em inglês
+  semantic_role: dimension
+- name: stats
+  type: ARRAY
+  nullable: false
+  description: Estatísticas base
+  semantic_role: dimension
+- name: abilities
+  type: ARRAY
+  nullable: false
+  description: Habilidades ordenadas em inglês
+  semantic_role: dimension
+- name: source_max_observed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Maior observação Silver utilizada
+  semantic_role: audit
+- name: gold_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da publicação
+  semantic_role: audit
+- name: gold_run_id
+  type: STRING
+  nullable: false
+  description: Execução Gold responsável
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - pokemon_key
+  - pokemon_id
+  - localized_name
+  - canonical_name
+  - species_id
+  - genus
+  - description
+  - generation_id
+  - generation_name
+  - height_m
+  - weight_kg
+  - base_experience
+  - is_default
+  - is_baby
+  - is_legendary
+  - is_mythical
+  - official_artwork_url
+  - official_artwork_shiny_url
+  - sprite_url
+  - sprite_shiny_url
+  - types
+  - stats
+  - abilities
+  - source_max_observed_at
+  - gold_transformed_at
+  - gold_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - pokemon_key
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - pokemon_key
+  severity: error
+- name: pokemon_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: pokemon_id
+  severity: error
+- name: localized_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: localized_name
+  severity: error
+- name: canonical_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: canonical_name
+  severity: error
+- name: height_m_not_null
+  type: expect_column_values_to_not_be_null
+  column: height_m
+  severity: error
+- name: weight_kg_not_null
+  type: expect_column_values_to_not_be_null
+  column: weight_kg
+  severity: error
+- name: is_default_not_null
+  type: expect_column_values_to_not_be_null
+  column: is_default
+  severity: error
+- name: types_not_null
+  type: expect_column_values_to_not_be_null
+  column: types
+  severity: error
+- name: stats_not_null
+  type: expect_column_values_to_not_be_null
+  column: stats
+  severity: error
+- name: abilities_not_null
+  type: expect_column_values_to_not_be_null
+  column: abilities
+  severity: error
+- name: source_max_observed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_max_observed_at
+  severity: error
+- name: gold_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_transformed_at
+  severity: error
+- name: gold_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_run_id
+  severity: error
+sql_templates:
+- sql/gold/create/create_gold_pokemon_catalog.sql
+- sql/gold/stage/stage_gold_pokemon_catalog.sql
+- sql/gold/merge/merge_gold_pokemon_catalog.sql
+- sql/gold/quality/quality_gold_pokemon_catalog.sql

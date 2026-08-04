@@ -1,0 +1,169 @@
+version: 1
+layer: bronze
+domain: entity
+owner: pokeapi_lakehouse
+logical_name: table
+table: <endpoint>
+description: Payloads JSON imutáveis da PokéAPI REST v2
+grain: uma linha por recurso retornado pela PokéAPI e hash de payload
+primary_key:
+- endpoint
+- resource_id
+- payload_sha256
+foreign_keys: []
+partition_by: []
+columns:
+- name: endpoint
+  type: STRING
+  nullable: false
+  description: Recurso REST v2 de origem
+  semantic_role: dimension
+- name: resource_id
+  type: BIGINT
+  nullable: true
+  description: Identificador numérico extraído da URL, quando disponível
+  semantic_role: business_key
+- name: resource_name
+  type: STRING
+  nullable: true
+  description: Nome presente no payload, quando disponível
+  semantic_role: dimension
+- name: source_url
+  type: STRING
+  nullable: false
+  description: URL canônica do recurso coletado
+  semantic_role: lineage
+- name: http_status
+  type: INT
+  nullable: false
+  description: Status HTTP observado na coleta
+  semantic_role: metric
+- name: payload_json
+  type: STRING
+  nullable: false
+  description: Resposta JSON integral, sem regras de negócio
+  semantic_role: dimension
+- name: payload_sha256
+  type: STRING
+  nullable: false
+  description: Hash SHA-256 usado para versão e idempotência
+  semantic_role: lineage
+- name: source_observed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Timestamp horário de Brasília (UTC-3) de recebimento da resposta
+  semantic_role: lineage
+- name: response_bytes
+  type: BIGINT
+  nullable: false
+  description: Tamanho da resposta HTTP em bytes
+  semantic_role: metric
+- name: duration_ms
+  type: BIGINT
+  nullable: false
+  description: Duração total da requisição em milissegundos
+  semantic_role: audit
+- name: attempt_count
+  type: INT
+  nullable: false
+  description: Quantidade de tentativas da requisição
+  semantic_role: metric
+- name: etag
+  type: STRING
+  nullable: true
+  description: ETag retornado pela fonte, quando disponível
+  semantic_role: dimension
+- name: last_modified
+  type: STRING
+  nullable: true
+  description: Last-Modified retornado pela fonte, quando disponível
+  semantic_role: dimension
+- name: ingested_at
+  type: TIMESTAMP
+  nullable: false
+  description: Timestamp horário de Brasília (UTC-3) de formação do lote Bronze
+  semantic_role: audit
+- name: run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução de ingestão
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - endpoint
+  - resource_id
+  - resource_name
+  - source_url
+  - http_status
+  - payload_json
+  - payload_sha256
+  - source_observed_at
+  - response_bytes
+  - duration_ms
+  - attempt_count
+  - etag
+  - last_modified
+  - ingested_at
+  - run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - endpoint
+  - resource_id
+  - payload_sha256
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - endpoint
+  - resource_id
+  - payload_sha256
+  severity: error
+- name: source_url_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_url
+  severity: error
+- name: http_status_not_null
+  type: expect_column_values_to_not_be_null
+  column: http_status
+  severity: error
+- name: payload_json_not_null
+  type: expect_column_values_to_not_be_null
+  column: payload_json
+  severity: error
+- name: source_observed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_observed_at
+  severity: error
+- name: response_bytes_not_null
+  type: expect_column_values_to_not_be_null
+  column: response_bytes
+  severity: error
+- name: duration_ms_not_null
+  type: expect_column_values_to_not_be_null
+  column: duration_ms
+  severity: error
+- name: attempt_count_not_null
+  type: expect_column_values_to_not_be_null
+  column: attempt_count
+  severity: error
+- name: ingested_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: ingested_at
+  severity: error
+- name: run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: run_id
+  severity: error
+- name: payload_sha256_length
+  type: expect_column_value_lengths_to_equal
+  column: payload_sha256
+  value: 64
+  severity: error
+sql_templates:
+- sql/bronze/create/create_bronze_table.sql
+- sql/bronze/merge/merge_bronze_table.sql
+- sql/bronze/quality/quality_bronze_table.sql

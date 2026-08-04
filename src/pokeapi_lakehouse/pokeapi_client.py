@@ -7,11 +7,13 @@ import random
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
+
+from pokeapi_lakehouse.time_utils import now_brasilia
 
 BASE_URL = "https://pokeapi.co/api/v2"
 
@@ -115,7 +117,7 @@ class PokeApiClient:
                     return HttpResponse(
                         http_status=response.status,
                         body=body,
-                        observed_at=datetime.now(UTC),
+                        observed_at=now_brasilia(),
                         response_bytes=len(raw_body),
                         duration_ms=round((time.perf_counter() - started) * 1000),
                         attempt_count=attempt + 1,
@@ -202,7 +204,7 @@ class PokeApiClient:
                             source_url=url,
                             error_type=type(exc.cause).__name__,
                             error_message=str(exc)[:1000],
-                            attempted_at=datetime.now(UTC),
+                            attempted_at=now_brasilia(),
                             http_status=exc.http_status,
                             attempt_count=exc.attempt_count,
                             duration_ms=exc.duration_ms,

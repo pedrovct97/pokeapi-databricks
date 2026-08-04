@@ -51,13 +51,13 @@ As queries usam somente o nome totalmente qualificado da tabela como parâmetro.
 | `http_status` | int | não | Status HTTP; somente 200 entra na tabela de dados. |
 | `payload_json` | string | não | Resposta integral, sem regra de negócio. |
 | `payload_sha256` | string | não | Hash do payload usado para versão e idempotência. |
-| `source_observed_at` | timestamp | não | Momento UTC em que a resposta foi recebida. |
+| `source_observed_at` | timestamp | não | Momento horário de Brasília (UTC-3) em que a resposta foi recebida. |
 | `response_bytes` | long | não | Tamanho da resposta HTTP em bytes. |
 | `duration_ms` | long | não | Duração total da requisição, incluindo retries. |
 | `attempt_count` | int | não | Quantidade de tentativas realizadas. |
 | `etag` | string | sim | ETag HTTP, quando fornecido pela origem. |
 | `last_modified` | string | sim | Last-Modified HTTP, quando fornecido pela origem. |
-| `ingested_at` | timestamp | não | Momento UTC de formação do lote Spark. |
+| `ingested_at` | timestamp | não | Momento horário de Brasília (UTC-3) de formação do lote Spark. |
 | `run_id` | string | não | UUID da execução que observou a versão. |
 
 `_ingestion_runs` registra desde `RUNNING` até o estado final, além de `list_count`,
