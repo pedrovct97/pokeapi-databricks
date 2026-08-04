@@ -1,0 +1,47 @@
+version: 1
+layer: bronze
+domain: great_expectations
+owner: pokeapi_lakehouse
+suite_name: bronze_table
+description: >-
+  Contrato Great Expectations local para amostras Bronze usado no CI. Complementa as quality_*.sql
+  executadas no Databricks.
+quality:
+  - ExpectTableColumnsToMatchSet
+  - ExpectCompoundColumnsToBeUnique
+  - ExpectColumnValuesToNotBeNull
+  - ExpectColumnValuesToMatchRegex
+  - ExpectColumnValuesToBeInSet
+  - ExpectColumnValueLengthsToEqual
+  - ExpectColumnValuesToBeBetween
+expectations:
+  - type: ExpectTableColumnsToMatchSet
+    columns:
+      - run_id
+      - endpoint
+      - source_url
+      - http_status
+      - payload_json
+      - payload_sha256
+      - source_observed_at
+      - response_bytes
+      - duration_ms
+      - attempt_count
+      - ingested_at
+  - type: ExpectCompoundColumnsToBeUnique
+    columns:
+      - endpoint
+      - resource_id
+      - payload_sha256
+  - type: ExpectColumnValuesToNotBeNull
+    column: run_id
+  - type: ExpectColumnValuesToMatchRegex
+    column: source_url
+    regex: ^https://pokeapi\\.co/api/v2/
+  - type: ExpectColumnValuesToBeInSet
+    column: http_status
+    values:
+      - 200
+  - type: ExpectColumnValueLengthsToEqual
+    column: payload_sha256
+    value: 64

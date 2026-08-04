@@ -1,0 +1,109 @@
+version: 1
+layer: gold
+domain: dim
+owner: pokeapi_lakehouse
+logical_name: version_group
+table: dim_version_group
+description: Dimensão Gold de grupos de versão da PokéAPI para contexto de jogo e rulesets
+grain: uma linha por entidade conformada em dim_version_group
+primary_key:
+- version_group_id
+foreign_keys: []
+partition_by: []
+columns:
+- name: version_group_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do grupo de versão no formato version_group|version_group_id
+  semantic_role: business_key
+- name: version_group_id
+  type: BIGINT
+  nullable: false
+  description: Identificador do grupo de versão na PokéAPI
+  semantic_role: business_key
+- name: version_group_name
+  type: STRING
+  nullable: false
+  description: Nome técnico do grupo de versão, como emerald ou firered-leafgreen
+  semantic_role: dimension
+- name: generation_id
+  type: BIGINT
+  nullable: false
+  description: Identificador da geração associada ao grupo de versão
+  semantic_role: business_key
+- name: generation_name
+  type: STRING
+  nullable: false
+  description: Nome técnico da geração associada ao grupo de versão
+  semantic_role: dimension
+- name: order_index
+  type: INT
+  nullable: false
+  description: Ordem oficial do grupo de versão usada para ordenação no dashboard
+  semantic_role: metric
+- name: gold_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da publicação Gold
+  semantic_role: audit
+- name: gold_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Gold responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - version_group_key
+  - version_group_id
+  - version_group_name
+  - generation_id
+  - generation_name
+  - order_index
+  - gold_transformed_at
+  - gold_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - version_group_id
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - version_group_id
+  severity: error
+- name: version_group_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_key
+  severity: error
+- name: version_group_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_name
+  severity: error
+- name: generation_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: generation_id
+  severity: error
+- name: generation_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: generation_name
+  severity: error
+- name: order_index_not_null
+  type: expect_column_values_to_not_be_null
+  column: order_index
+  severity: error
+- name: gold_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_transformed_at
+  severity: error
+- name: gold_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_run_id
+  severity: error
+sql_templates:
+- sql/gold/create/create_gold_version_group.sql
+- sql/gold/stage/stage_gold_version_group.sql
+- sql/gold/merge/merge_gold_version_group.sql
+- sql/gold/quality/quality_gold_version_group.sql

@@ -41,7 +41,8 @@ Em **Settings > Branches**, proteja a `main` e torne obrigatórios:
 ## Contrato Great Expectations
 
 `tests/data_quality/test_bronze_expectations.py` cria uma amostra determinística usando
-a mesma conversão da ingestão Bronze. O contrato verifica:
+a mesma conversão da ingestão Bronze. O contrato executável continua no teste e é documentado em
+`src/pokeapi_lakehouse/contracts/great_expectations/bronze_table.yaml`. Ele verifica:
 
 - conjunto exato de colunas;
 - unicidade de endpoint, identificador e hash do payload;
@@ -54,6 +55,27 @@ a mesma conversão da ingestão Bronze. O contrato verifica:
 As consultas `quality_*.sql` continuam sendo a validação autoritativa no Databricks.
 Great Expectations antecipa regressões no CI; ele não substitui reconciliação,
 integridade referencial ou validação das tabelas reais.
+
+## Layout de SQL e contratos empacotados
+
+Os SQLs do pacote são empacotados recursivamente via `sql/**/*.sql` e ficam separados por
+camada/operação:
+
+```txt
+src/pokeapi_lakehouse/sql/bronze/{create,insert,merge,quality}/
+src/pokeapi_lakehouse/sql/silver/{create,insert,merge,quality,stage}/
+src/pokeapi_lakehouse/sql/gold/{create,merge,quality,stage}/
+```
+
+`tests/test_sql_layout.py` impede regressão para diretório plano, valida que `sql_query(...)`
+resolve templates em subpastas, exige um YAML por tabela/produto com `create_*.sql`, valida que cada
+contrato é um data dictionary completo e confirma que `contracts/**/*.yaml` também entra no pacote.
+O teste compara os YAMLs com `tools/generate_data_contracts.py`; se um DDL mudar, regenere os
+contratos antes de fechar a alteração.
+
+O job `metadata_sync` do bundle usa esses contratos para aplicar comentários em tabelas e colunas no
+Unity Catalog. Ele é validado por `tests/test_uc_metadata.py` e `tests/test_jobs.py`, mas sua execução
+remota altera metadados e deve ser feita manualmente/aprovada fora do CI automático.
 
 ## Como reproduzir localmente
 

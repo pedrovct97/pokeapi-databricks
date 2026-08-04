@@ -1,0 +1,112 @@
+version: 1
+layer: gold
+domain: metadata
+owner: pokeapi_lakehouse
+logical_name: runs
+table: _runs
+description: Auditoria das publicações Gold
+grain: uma linha por produto publicado em uma execução Gold
+primary_key:
+- gold_run_id
+- product
+foreign_keys: []
+partition_by: []
+columns:
+- name: gold_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Gold
+  semantic_role: audit
+- name: product
+  type: STRING
+  nullable: false
+  description: Produto publicado
+  semantic_role: dimension
+- name: started_at
+  type: TIMESTAMP
+  nullable: false
+  description: Início horário de Brasília (UTC-3)
+  semantic_role: audit
+- name: finished_at
+  type: TIMESTAMP
+  nullable: false
+  description: Fim horário de Brasília (UTC-3)
+  semantic_role: audit
+- name: status
+  type: STRING
+  nullable: false
+  description: RUNNING, SUCCESS ou FAILED
+  semantic_role: audit
+- name: published_count
+  type: BIGINT
+  nullable: false
+  description: Linhas publicadas
+  semantic_role: metric
+- name: duration_ms
+  type: BIGINT
+  nullable: false
+  description: Duração em milissegundos
+  semantic_role: audit
+- name: transformer_version
+  type: STRING
+  nullable: false
+  description: Versão do pacote
+  semantic_role: dimension
+- name: error_message
+  type: STRING
+  nullable: true
+  description: Erro acionável quando houver falha
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - gold_run_id
+  - product
+  - started_at
+  - finished_at
+  - status
+  - published_count
+  - duration_ms
+  - transformer_version
+  - error_message
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - gold_run_id
+  - product
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - gold_run_id
+  - product
+  severity: error
+- name: started_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: started_at
+  severity: error
+- name: finished_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: finished_at
+  severity: error
+- name: status_not_null
+  type: expect_column_values_to_not_be_null
+  column: status
+  severity: error
+- name: published_count_not_null
+  type: expect_column_values_to_not_be_null
+  column: published_count
+  severity: error
+- name: duration_ms_not_null
+  type: expect_column_values_to_not_be_null
+  column: duration_ms
+  severity: error
+- name: transformer_version_not_null
+  type: expect_column_values_to_not_be_null
+  column: transformer_version
+  severity: error
+sql_templates:
+- sql/gold/create/create_gold_runs.sql
+- sql/gold/merge/merge_gold_runs.sql

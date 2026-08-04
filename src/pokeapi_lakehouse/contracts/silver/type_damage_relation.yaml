@@ -1,0 +1,134 @@
+version: 1
+layer: silver
+domain: table
+owner: pokeapi_lakehouse
+logical_name: type_damage_relation
+table: type_damage_relation
+description: Exceções à efetividade neutra entre tipos; ausência equivale a multiplicador 1.0
+grain: uma linha por tabela normalizada Silver em type_damage_relation
+primary_key:
+- source_type_id
+- target_type_id
+foreign_keys:
+- columns:
+  - source_type_id
+  references: silver.type.type_id
+- columns:
+  - target_type_id
+  references: silver.type.type_id
+partition_by: []
+columns:
+- name: source_type_id
+  type: BIGINT
+  nullable: false
+  description: Identificador de source type
+  semantic_role: business_key
+- name: source_type_name
+  type: STRING
+  nullable: false
+  description: Nome técnico de source type
+  semantic_role: dimension
+- name: target_type_id
+  type: BIGINT
+  nullable: false
+  description: Identificador de target type
+  semantic_role: business_key
+- name: target_type_name
+  type: STRING
+  nullable: false
+  description: Nome técnico de target type
+  semantic_role: dimension
+- name: damage_multiplier
+  type: DECIMAL(3,1)
+  nullable: false
+  description: Campo damage multiplier documentado a partir do contrato da tabela
+  semantic_role: metric
+- name: source_url
+  type: STRING
+  nullable: false
+  description: URL canônica do recurso Bronze usado como linhagem da transformação
+  semantic_role: lineage
+- name: source_payload_sha256
+  type: STRING
+  nullable: false
+  description: Hash SHA-256 do payload Bronze usado como versão e linhagem
+  semantic_role: lineage
+- name: source_observed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Timestamp horário de Brasília (UTC-3) da observação do dado na origem
+  semantic_role: lineage
+- name: silver_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Timestamp horário de Brasília (UTC-3) da transformação Silver
+  semantic_role: audit
+- name: silver_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Silver responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - source_type_id
+  - source_type_name
+  - target_type_id
+  - target_type_name
+  - damage_multiplier
+  - source_url
+  - source_payload_sha256
+  - source_observed_at
+  - silver_transformed_at
+  - silver_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - source_type_id
+  - target_type_id
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - source_type_id
+  - target_type_id
+  severity: error
+- name: source_type_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_type_name
+  severity: error
+- name: target_type_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: target_type_name
+  severity: error
+- name: damage_multiplier_not_null
+  type: expect_column_values_to_not_be_null
+  column: damage_multiplier
+  severity: error
+- name: source_url_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_url
+  severity: error
+- name: source_payload_sha256_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_payload_sha256
+  severity: error
+- name: source_observed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_observed_at
+  severity: error
+- name: silver_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: silver_transformed_at
+  severity: error
+- name: silver_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: silver_run_id
+  severity: error
+sql_templates:
+- sql/silver/create/create_silver_type_damage_relation.sql
+- sql/silver/stage/stage_silver_type_damage_relation.sql
+- sql/silver/merge/merge_silver_type_damage_relation.sql
+- sql/silver/quality/quality_silver_type_damage_relation.sql

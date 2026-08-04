@@ -1,0 +1,251 @@
+version: 1
+layer: silver
+domain: table
+owner: pokeapi_lakehouse
+logical_name: pokemon_species
+table: pokemon_species
+description: Espécies Pokémon tipadas da PokéAPI
+grain: uma linha por tabela normalizada Silver em pokemon_species
+primary_key:
+- species_id
+foreign_keys: []
+partition_by: []
+columns:
+- name: species_id
+  type: BIGINT
+  nullable: false
+  description: Identificador de species
+  semantic_role: business_key
+- name: species_name
+  type: STRING
+  nullable: false
+  description: Nome técnico de species
+  semantic_role: dimension
+- name: sort_order
+  type: BIGINT
+  nullable: true
+  description: Campo sort order documentado a partir do contrato da tabela
+  semantic_role: metric
+- name: gender_rate
+  type: INT
+  nullable: true
+  description: Campo gender rate documentado a partir do contrato da tabela
+  semantic_role: metric
+- name: capture_rate
+  type: INT
+  nullable: true
+  description: Campo capture rate documentado a partir do contrato da tabela
+  semantic_role: metric
+- name: base_happiness
+  type: INT
+  nullable: true
+  description: Campo base happiness documentado a partir do contrato da tabela
+  semantic_role: metric
+- name: is_baby
+  type: BOOLEAN
+  nullable: false
+  description: Campo is baby documentado a partir do contrato da tabela
+  semantic_role: quality
+- name: is_legendary
+  type: BOOLEAN
+  nullable: false
+  description: Campo is legendary documentado a partir do contrato da tabela
+  semantic_role: quality
+- name: is_mythical
+  type: BOOLEAN
+  nullable: false
+  description: Campo is mythical documentado a partir do contrato da tabela
+  semantic_role: quality
+- name: hatch_counter
+  type: INT
+  nullable: true
+  description: Campo hatch counter documentado a partir do contrato da tabela
+  semantic_role: metric
+- name: has_gender_differences
+  type: BOOLEAN
+  nullable: false
+  description: Campo has gender differences documentado a partir do contrato da tabela
+  semantic_role: dimension
+- name: forms_switchable
+  type: BOOLEAN
+  nullable: false
+  description: Campo forms switchable documentado a partir do contrato da tabela
+  semantic_role: dimension
+- name: generation_id
+  type: BIGINT
+  nullable: true
+  description: Identificador de generation
+  semantic_role: business_key
+- name: generation_name
+  type: STRING
+  nullable: true
+  description: Nome técnico de generation
+  semantic_role: dimension
+- name: growth_rate_id
+  type: BIGINT
+  nullable: true
+  description: Identificador de growth rate
+  semantic_role: business_key
+- name: growth_rate_name
+  type: STRING
+  nullable: true
+  description: Nome técnico de growth rate
+  semantic_role: dimension
+- name: color_id
+  type: BIGINT
+  nullable: true
+  description: Identificador de color
+  semantic_role: business_key
+- name: color_name
+  type: STRING
+  nullable: true
+  description: Nome técnico de color
+  semantic_role: dimension
+- name: shape_id
+  type: BIGINT
+  nullable: true
+  description: Identificador de shape
+  semantic_role: business_key
+- name: shape_name
+  type: STRING
+  nullable: true
+  description: Nome técnico de shape
+  semantic_role: dimension
+- name: habitat_id
+  type: BIGINT
+  nullable: true
+  description: Identificador de habitat
+  semantic_role: business_key
+- name: habitat_name
+  type: STRING
+  nullable: true
+  description: Nome técnico de habitat
+  semantic_role: dimension
+- name: evolves_from_species_id
+  type: BIGINT
+  nullable: true
+  description: Identificador de evolves from species
+  semantic_role: business_key
+- name: evolves_from_species_name
+  type: STRING
+  nullable: true
+  description: Nome técnico de evolves from species
+  semantic_role: dimension
+- name: source_url
+  type: STRING
+  nullable: false
+  description: URL canônica do recurso Bronze usado como linhagem da transformação
+  semantic_role: lineage
+- name: source_payload_sha256
+  type: STRING
+  nullable: false
+  description: Hash SHA-256 do payload Bronze usado como versão e linhagem
+  semantic_role: lineage
+- name: source_observed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Timestamp horário de Brasília (UTC-3) da observação do dado na origem
+  semantic_role: lineage
+- name: silver_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Timestamp horário de Brasília (UTC-3) da transformação Silver
+  semantic_role: audit
+- name: silver_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Silver responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - species_id
+  - species_name
+  - sort_order
+  - gender_rate
+  - capture_rate
+  - base_happiness
+  - is_baby
+  - is_legendary
+  - is_mythical
+  - hatch_counter
+  - has_gender_differences
+  - forms_switchable
+  - generation_id
+  - generation_name
+  - growth_rate_id
+  - growth_rate_name
+  - color_id
+  - color_name
+  - shape_id
+  - shape_name
+  - habitat_id
+  - habitat_name
+  - evolves_from_species_id
+  - evolves_from_species_name
+  - source_url
+  - source_payload_sha256
+  - source_observed_at
+  - silver_transformed_at
+  - silver_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - species_id
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - species_id
+  severity: error
+- name: species_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: species_name
+  severity: error
+- name: is_baby_not_null
+  type: expect_column_values_to_not_be_null
+  column: is_baby
+  severity: error
+- name: is_legendary_not_null
+  type: expect_column_values_to_not_be_null
+  column: is_legendary
+  severity: error
+- name: is_mythical_not_null
+  type: expect_column_values_to_not_be_null
+  column: is_mythical
+  severity: error
+- name: has_gender_differences_not_null
+  type: expect_column_values_to_not_be_null
+  column: has_gender_differences
+  severity: error
+- name: forms_switchable_not_null
+  type: expect_column_values_to_not_be_null
+  column: forms_switchable
+  severity: error
+- name: source_url_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_url
+  severity: error
+- name: source_payload_sha256_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_payload_sha256
+  severity: error
+- name: source_observed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_observed_at
+  severity: error
+- name: silver_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: silver_transformed_at
+  severity: error
+- name: silver_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: silver_run_id
+  severity: error
+sql_templates:
+- sql/silver/create/create_silver_pokemon_species.sql
+- sql/silver/stage/stage_silver_pokemon_species.sql
+- sql/silver/merge/merge_silver_pokemon_species.sql
+- sql/silver/quality/quality_silver_pokemon_species.sql

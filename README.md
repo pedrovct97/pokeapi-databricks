@@ -19,8 +19,24 @@ inglês, idioma disponibilizado pela fonte para o conteúdo consumido.
 Detalhes: [arquitetura](docs/architecture.md), [governança](docs/governance.md) e [processo por gates](docs/delivery-gates.md).
 
 Contrato e runbook da ingestão: [Fase 1 — Bronze](docs/bronze-ingestion.md).
-As DDLs, `MERGE` e verificações de qualidade ficam em
-[`src/pokeapi_lakehouse/sql`](src/pokeapi_lakehouse/sql/), separadas do cliente HTTP Python.
+As DDLs, stages, `MERGE`, inserts e verificações de qualidade ficam em
+[`src/pokeapi_lakehouse/sql`](src/pokeapi_lakehouse/sql/), separadas do cliente HTTP Python e
+organizadas por camada e operação:
+
+```txt
+sql/bronze/{create,insert,merge,quality}/
+sql/silver/{create,insert,merge,quality,stage}/
+sql/gold/{create,merge,quality,stage}/
+```
+
+O loader `sql_query(...)` procura templates recursivamente dentro desse diretório, mantendo os
+nomes lógicos usados pelos orquestradores. Os contratos YAML versionados ficam em
+[`src/pokeapi_lakehouse/contracts`](src/pokeapi_lakehouse/contracts/), separados por contrato lógico
+de tabela/produto: Silver fica plano; Bronze e Gold usam domínios de contrato quando isso ajuda a
+documentação. Cada YAML funciona como
+data dictionary navegável: descreve tabela, granularidade, chaves, partições, colunas, tipos,
+nullability, comentários e expectations de qualidade. A pasta `contracts/great_expectations/`
+registra expectativas locais de qualidade usadas no CI.
 
 Silver SQL-first: [domínio de Pokémon e batalha](docs/silver-pilot.md).
 
@@ -50,6 +66,10 @@ databricks bundle validate -t dev -p pokeapi-free
 ```
 
 Deploy e execução remota exigem autorização explícita.
+
+Para sincronizar comentários de tabelas/colunas no Unity Catalog a partir dos contratos YAML, use o
+entrypoint `metadata_sync`. Primeiro gere um dry-run no job ou localmente para revisar os SQLs; a
+execução sem `--dry-run` altera metadados no Databricks e exige autorização explícita.
 
 ## Ferramentas de AI do projeto
 

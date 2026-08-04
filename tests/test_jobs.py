@@ -22,3 +22,15 @@ def test_gold_job_splits_foundation_from_matchup_partition_workers() -> None:
     assert "red-blue|50" not in gold_section
     assert gold_section.count("|50") + gold_section.count("|80") + gold_section.count("|100") == 30
     assert "task_key: publish_battle_foundation" not in gold_section
+
+
+def test_metadata_sync_job_runs_dedicated_wheel_entrypoint() -> None:
+    jobs_yml = Path("resources/jobs.yml").read_text()
+    metadata_section = jobs_yml.split("    metadata_sync:", maxsplit=1)[1]
+    metadata_section = metadata_section.split("    gold_transformation:", maxsplit=1)[0]
+
+    assert "name: pokeapi-metadata-sync-${bundle.target}" in metadata_section
+    assert "task_key: sync_uc_comments" in metadata_section
+    assert "entry_point: metadata_sync" in metadata_section
+    assert "--layers" in metadata_section
+    assert "--domains" in metadata_section

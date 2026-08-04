@@ -1,0 +1,120 @@
+version: 1
+layer: bronze
+domain: metadata
+owner: pokeapi_lakehouse
+logical_name: ingestion_failures
+table: _ingestion_failures
+description: Falhas individuais observadas durante a ingestão Bronze
+grain: uma linha por falha observada durante ingestão Bronze
+primary_key:
+- run_id
+- endpoint
+- source_url
+foreign_keys: []
+partition_by: []
+columns:
+- name: endpoint
+  type: STRING
+  nullable: false
+  description: Endpoint processado
+  semantic_role: dimension
+- name: source_url
+  type: STRING
+  nullable: false
+  description: URL cuja coleta falhou
+  semantic_role: lineage
+- name: error_type
+  type: STRING
+  nullable: false
+  description: Classe técnica da exceção
+  semantic_role: dimension
+- name: error_message
+  type: STRING
+  nullable: false
+  description: Mensagem truncada, sem payload
+  semantic_role: audit
+- name: http_status
+  type: INT
+  nullable: true
+  description: Status HTTP final, quando disponível
+  semantic_role: metric
+- name: attempt_count
+  type: INT
+  nullable: false
+  description: Quantidade de tentativas realizadas
+  semantic_role: metric
+- name: duration_ms
+  type: BIGINT
+  nullable: false
+  description: Duração total das tentativas em milissegundos
+  semantic_role: audit
+- name: is_retriable
+  type: BOOLEAN
+  nullable: false
+  description: Indica se a categoria da falha permite retry
+  semantic_role: quality
+- name: attempted_at
+  type: TIMESTAMP
+  nullable: false
+  description: Timestamp horário de Brasília (UTC-3) da tentativa
+  semantic_role: audit
+- name: run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - endpoint
+  - source_url
+  - error_type
+  - error_message
+  - http_status
+  - attempt_count
+  - duration_ms
+  - is_retriable
+  - attempted_at
+  - run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - run_id
+  - endpoint
+  - source_url
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - run_id
+  - endpoint
+  - source_url
+  severity: error
+- name: error_type_not_null
+  type: expect_column_values_to_not_be_null
+  column: error_type
+  severity: error
+- name: error_message_not_null
+  type: expect_column_values_to_not_be_null
+  column: error_message
+  severity: error
+- name: attempt_count_not_null
+  type: expect_column_values_to_not_be_null
+  column: attempt_count
+  severity: error
+- name: duration_ms_not_null
+  type: expect_column_values_to_not_be_null
+  column: duration_ms
+  severity: error
+- name: is_retriable_not_null
+  type: expect_column_values_to_not_be_null
+  column: is_retriable
+  severity: error
+- name: attempted_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: attempted_at
+  severity: error
+sql_templates:
+- sql/bronze/create/create_ingestion_failures.sql

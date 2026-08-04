@@ -72,6 +72,51 @@ resources:
             dependencies:
               - ${var.package_wheel_path}
 
+    metadata_sync:
+      name: pokeapi-metadata-sync-${bundle.target}
+      description: Sincroniza comentários de tabelas e colunas no Unity Catalog a partir dos contratos YAML.
+      max_concurrent_runs: 1
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: bronze_schema
+          default: ${var.bronze_schema}
+        - name: silver_schema
+          default: ${var.silver_schema}
+        - name: gold_schema
+          default: ${var.gold_schema}
+        - name: layers
+          default: all
+        - name: domains
+          default: all
+      tasks:
+        - task_key: sync_uc_comments
+          environment_key: default
+          timeout_seconds: 1800
+          max_retries: 0
+          python_wheel_task:
+            package_name: pokeapi_lakehouse
+            entry_point: metadata_sync
+            parameters:
+              - --catalog
+              - "{{job.parameters.catalog}}"
+              - --bronze-schema
+              - "{{job.parameters.bronze_schema}}"
+              - --silver-schema
+              - "{{job.parameters.silver_schema}}"
+              - --gold-schema
+              - "{{job.parameters.gold_schema}}"
+              - --layers
+              - "{{job.parameters.layers}}"
+              - --domains
+              - "{{job.parameters.domains}}"
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"
+            dependencies:
+              - ${var.package_wheel_path}
+
     gold_transformation:
       name: pokeapi-gold-transformation-${bundle.target}
       description: Publica contexto/catálogo/fundação Gold e calcula matchup em workers por partição.

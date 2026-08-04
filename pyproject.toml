@@ -7,13 +7,16 @@ name = "pokeapi-lakehouse"
 version = "0.9.14"
 description = "Pipeline Lakehouse da PokéAPI para Databricks Free Edition"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+  "PyYAML>=6,<7",
+]
 
 [project.scripts]
 bronze_ingestion = "pokeapi_lakehouse.cli:main"
 silver_transform = "pokeapi_lakehouse.silver_cli:main"
 gold_transform = "pokeapi_lakehouse.gold_cli:main"
 matchup_transform = "pokeapi_lakehouse.matchup_cli:main"
+metadata_sync = "pokeapi_lakehouse.metadata_cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -32,10 +35,7 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-pokeapi_lakehouse = ["sql/*.sql"]
-
-[tool.setuptools.exclude-package-data]
-pokeapi_lakehouse = ["sql/insert_ingestion_runs.sql"]
+pokeapi_lakehouse = ["contracts/**/*.yaml", "sql/**/*.sql"]
 
 [tool.pytest.ini_options]
 addopts = "-ra -p no:cacheprovider"
@@ -60,4 +60,8 @@ packages = ["pokeapi_lakehouse"]
 
 [[tool.mypy.overrides]]
 module = ["pyspark", "pyspark.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["yaml"]
 ignore_missing_imports = true

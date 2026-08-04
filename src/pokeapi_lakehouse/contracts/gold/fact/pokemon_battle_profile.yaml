@@ -1,0 +1,228 @@
+version: 1
+layer: gold
+domain: fact
+owner: pokeapi_lakehouse
+logical_name: pokemon_battle_profile
+table: fact_pokemon_battle_stats
+description: Perfil Gold de batalha com stats base e efetividades defensivas por Pokémon
+grain: uma linha por Pokémon, ruleset e nível de batalha com stats derivados
+primary_key:
+- pokemon_key
+- ruleset_key
+foreign_keys: []
+partition_by: []
+columns:
+- name: pokemon_battle_stats_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do perfil de batalha do Pokémon no ruleset
+  semantic_role: business_key
+- name: ruleset_key
+  type: STRING
+  nullable: false
+  description: Chave do ruleset aplicado ao perfil de batalha
+  semantic_role: business_key
+- name: ruleset_id
+  type: STRING
+  nullable: false
+  description: Identificador legível do ruleset aplicado ao perfil de batalha
+  semantic_role: business_key
+- name: battle_level
+  type: INT
+  nullable: false
+  description: Nível de batalha do ruleset associado ao perfil
+  semantic_role: metric
+- name: pokemon_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do Pokémon
+  semantic_role: business_key
+- name: pokemon_id
+  type: BIGINT
+  nullable: false
+  description: Identificador PokéAPI do Pokémon
+  semantic_role: business_key
+- name: pokemon_name
+  type: STRING
+  nullable: false
+  description: Nome em inglês do Pokémon
+  semantic_role: dimension
+- name: hp
+  type: INT
+  nullable: false
+  description: HP base publicado na Silver
+  semantic_role: metric
+- name: attack
+  type: INT
+  nullable: false
+  description: Ataque físico base publicado na Silver
+  semantic_role: metric
+- name: defense
+  type: INT
+  nullable: false
+  description: Defesa física base publicada na Silver
+  semantic_role: metric
+- name: special_attack
+  type: INT
+  nullable: false
+  description: Ataque especial base publicado na Silver
+  semantic_role: metric
+- name: special_defense
+  type: INT
+  nullable: false
+  description: Defesa especial base publicada na Silver
+  semantic_role: metric
+- name: speed
+  type: INT
+  nullable: false
+  description: Velocidade base publicada na Silver
+  semantic_role: metric
+- name: base_stat_total
+  type: INT
+  nullable: false
+  description: Soma dos seis stats base
+  semantic_role: metric
+- name: primary_offense
+  type: STRING
+  nullable: false
+  description: 'Classe ofensiva dominante do Pokémon no baseline: physical ou special'
+  semantic_role: dimension
+- name: weaknesses
+  type: ARRAY
+  nullable: false
+  description: Tipos que causam dano aumentado ao Pokémon e seus multiplicadores combinados
+  semantic_role: dimension
+- name: resistances
+  type: ARRAY
+  nullable: false
+  description: Tipos que causam dano reduzido ao Pokémon e seus multiplicadores combinados
+  semantic_role: dimension
+- name: immunities
+  type: ARRAY
+  nullable: false
+  description: Tipos que não causam dano ao Pokémon no baseline de efetividade
+  semantic_role: dimension
+- name: gold_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da publicação Gold
+  semantic_role: audit
+- name: gold_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Gold responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - pokemon_battle_stats_key
+  - ruleset_key
+  - ruleset_id
+  - battle_level
+  - pokemon_key
+  - pokemon_id
+  - pokemon_name
+  - hp
+  - attack
+  - defense
+  - special_attack
+  - special_defense
+  - speed
+  - base_stat_total
+  - primary_offense
+  - weaknesses
+  - resistances
+  - immunities
+  - gold_transformed_at
+  - gold_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - pokemon_key
+  - ruleset_key
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - pokemon_key
+  - ruleset_key
+  severity: error
+- name: pokemon_battle_stats_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: pokemon_battle_stats_key
+  severity: error
+- name: ruleset_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: ruleset_id
+  severity: error
+- name: battle_level_not_null
+  type: expect_column_values_to_not_be_null
+  column: battle_level
+  severity: error
+- name: pokemon_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: pokemon_id
+  severity: error
+- name: pokemon_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: pokemon_name
+  severity: error
+- name: hp_not_null
+  type: expect_column_values_to_not_be_null
+  column: hp
+  severity: error
+- name: attack_not_null
+  type: expect_column_values_to_not_be_null
+  column: attack
+  severity: error
+- name: defense_not_null
+  type: expect_column_values_to_not_be_null
+  column: defense
+  severity: error
+- name: special_attack_not_null
+  type: expect_column_values_to_not_be_null
+  column: special_attack
+  severity: error
+- name: special_defense_not_null
+  type: expect_column_values_to_not_be_null
+  column: special_defense
+  severity: error
+- name: speed_not_null
+  type: expect_column_values_to_not_be_null
+  column: speed
+  severity: error
+- name: base_stat_total_not_null
+  type: expect_column_values_to_not_be_null
+  column: base_stat_total
+  severity: error
+- name: primary_offense_not_null
+  type: expect_column_values_to_not_be_null
+  column: primary_offense
+  severity: error
+- name: weaknesses_not_null
+  type: expect_column_values_to_not_be_null
+  column: weaknesses
+  severity: error
+- name: resistances_not_null
+  type: expect_column_values_to_not_be_null
+  column: resistances
+  severity: error
+- name: immunities_not_null
+  type: expect_column_values_to_not_be_null
+  column: immunities
+  severity: error
+- name: gold_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_transformed_at
+  severity: error
+- name: gold_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_run_id
+  severity: error
+sql_templates:
+- sql/gold/create/create_gold_pokemon_battle_profile.sql
+- sql/gold/stage/stage_gold_pokemon_battle_profile.sql
+- sql/gold/merge/merge_gold_pokemon_battle_profile.sql
+- sql/gold/quality/quality_gold_pokemon_battle_profile.sql

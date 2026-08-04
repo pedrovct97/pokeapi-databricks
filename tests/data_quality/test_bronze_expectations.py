@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import great_expectations as gx
 import pandas as pd
 import pytest
+import yaml
 
 from pokeapi_lakehouse.bronze import to_bronze_row
 from pokeapi_lakehouse.pokeapi_client import FetchedResource
+
+GE_CONTRACT = Path("src/pokeapi_lakehouse/contracts/great_expectations/bronze_table.yaml")
 
 
 def _bronze_frame() -> pd.DataFrame:
@@ -86,6 +90,21 @@ def _validate(frame: pd.DataFrame) -> list[str]:
 
 def test_bronze_sample_satisfies_the_data_contract() -> None:
     assert _validate(_bronze_frame()) == []
+
+
+def test_bronze_great_expectations_yaml_documents_the_ci_contract() -> None:
+    contract = yaml.safe_load(GE_CONTRACT.read_text(encoding="utf-8"))
+
+    assert contract["suite_name"] == "bronze_table"
+    expectation_types = {expectation["type"] for expectation in contract["expectations"]}
+    assert {
+        "ExpectTableColumnsToMatchSet",
+        "ExpectCompoundColumnsToBeUnique",
+        "ExpectColumnValuesToNotBeNull",
+        "ExpectColumnValuesToMatchRegex",
+        "ExpectColumnValuesToBeInSet",
+        "ExpectColumnValueLengthsToEqual",
+    }.issubset(expectation_types)
 
 
 def test_bronze_contract_detects_duplicate_versions() -> None:

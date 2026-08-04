@@ -1,0 +1,136 @@
+version: 1
+layer: silver
+domain: table
+owner: pokeapi_lakehouse
+logical_name: ability_translation
+table: ability_translation
+description: Textos localizados de habilidades; uma linha por habilidade e idioma
+grain: uma linha por tabela normalizada Silver em ability_translation
+primary_key:
+- ability_id
+- language_id
+foreign_keys: []
+partition_by: []
+columns:
+- name: ability_id
+  type: BIGINT
+  nullable: false
+  description: Identificador da habilidade
+  semantic_role: business_key
+- name: language_id
+  type: BIGINT
+  nullable: false
+  description: Identificador do idioma
+  semantic_role: business_key
+- name: language_code
+  type: STRING
+  nullable: false
+  description: Código do idioma
+  semantic_role: dimension
+- name: localized_name
+  type: STRING
+  nullable: false
+  description: Nome localizado
+  semantic_role: dimension
+- name: flavor_text
+  type: STRING
+  nullable: true
+  description: Descrição localizada
+  semantic_role: dimension
+- name: effect_text
+  type: STRING
+  nullable: true
+  description: Efeito completo localizado
+  semantic_role: dimension
+- name: short_effect_text
+  type: STRING
+  nullable: true
+  description: Resumo do efeito localizado
+  semantic_role: dimension
+- name: source_url
+  type: STRING
+  nullable: false
+  description: URL Bronze
+  semantic_role: lineage
+- name: source_payload_sha256
+  type: STRING
+  nullable: false
+  description: Hash Bronze
+  semantic_role: lineage
+- name: source_observed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Observação da origem
+  semantic_role: lineage
+- name: silver_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Transformação horário de Brasília (UTC-3)
+  semantic_role: audit
+- name: silver_run_id
+  type: STRING
+  nullable: false
+  description: Execução Silver
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - ability_id
+  - language_id
+  - language_code
+  - localized_name
+  - flavor_text
+  - effect_text
+  - short_effect_text
+  - source_url
+  - source_payload_sha256
+  - source_observed_at
+  - silver_transformed_at
+  - silver_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - ability_id
+  - language_id
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - ability_id
+  - language_id
+  severity: error
+- name: language_code_not_null
+  type: expect_column_values_to_not_be_null
+  column: language_code
+  severity: error
+- name: localized_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: localized_name
+  severity: error
+- name: source_url_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_url
+  severity: error
+- name: source_payload_sha256_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_payload_sha256
+  severity: error
+- name: source_observed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_observed_at
+  severity: error
+- name: silver_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: silver_transformed_at
+  severity: error
+- name: silver_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: silver_run_id
+  severity: error
+sql_templates:
+- sql/silver/create/create_silver_ability_translation.sql
+- sql/silver/stage/stage_silver_ability_translation.sql
+- sql/silver/merge/merge_silver_ability_translation.sql
+- sql/silver/quality/quality_silver_ability_translation.sql

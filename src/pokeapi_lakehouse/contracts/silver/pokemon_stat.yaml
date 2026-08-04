@@ -1,0 +1,134 @@
+version: 1
+layer: silver
+domain: table
+owner: pokeapi_lakehouse
+logical_name: pokemon_stat
+table: pokemon_stat
+description: Valores base de estatísticas por Pokémon
+grain: uma linha por tabela normalizada Silver em pokemon_stat
+primary_key:
+- pokemon_id
+- stat_id
+foreign_keys:
+- columns:
+  - pokemon_id
+  references: silver.pokemon.pokemon_id
+- columns:
+  - stat_id
+  references: silver.stat.stat_id
+partition_by: []
+columns:
+- name: pokemon_id
+  type: BIGINT
+  nullable: false
+  description: Identificador de pokemon
+  semantic_role: business_key
+- name: stat_id
+  type: BIGINT
+  nullable: false
+  description: Identificador de stat
+  semantic_role: business_key
+- name: stat_name
+  type: STRING
+  nullable: false
+  description: Nome técnico de stat
+  semantic_role: dimension
+- name: base_stat
+  type: INT
+  nullable: false
+  description: Campo base stat documentado a partir do contrato da tabela
+  semantic_role: metric
+- name: effort
+  type: INT
+  nullable: false
+  description: Campo effort documentado a partir do contrato da tabela
+  semantic_role: metric
+- name: source_url
+  type: STRING
+  nullable: false
+  description: URL canônica do recurso Bronze usado como linhagem da transformação
+  semantic_role: lineage
+- name: source_payload_sha256
+  type: STRING
+  nullable: false
+  description: Hash SHA-256 do payload Bronze usado como versão e linhagem
+  semantic_role: lineage
+- name: source_observed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Timestamp horário de Brasília (UTC-3) da observação do dado na origem
+  semantic_role: lineage
+- name: silver_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Timestamp horário de Brasília (UTC-3) da transformação Silver
+  semantic_role: audit
+- name: silver_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Silver responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - pokemon_id
+  - stat_id
+  - stat_name
+  - base_stat
+  - effort
+  - source_url
+  - source_payload_sha256
+  - source_observed_at
+  - silver_transformed_at
+  - silver_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - pokemon_id
+  - stat_id
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - pokemon_id
+  - stat_id
+  severity: error
+- name: stat_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: stat_name
+  severity: error
+- name: base_stat_not_null
+  type: expect_column_values_to_not_be_null
+  column: base_stat
+  severity: error
+- name: effort_not_null
+  type: expect_column_values_to_not_be_null
+  column: effort
+  severity: error
+- name: source_url_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_url
+  severity: error
+- name: source_payload_sha256_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_payload_sha256
+  severity: error
+- name: source_observed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: source_observed_at
+  severity: error
+- name: silver_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: silver_transformed_at
+  severity: error
+- name: silver_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: silver_run_id
+  severity: error
+sql_templates:
+- sql/silver/create/create_silver_pokemon_stat.sql
+- sql/silver/stage/stage_silver_pokemon_stat.sql
+- sql/silver/merge/merge_silver_pokemon_stat.sql
+- sql/silver/quality/quality_silver_pokemon_stat.sql
