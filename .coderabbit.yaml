@@ -1,0 +1,86 @@
+reviews:
+  path_filters:
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.jpeg"
+    - "!**/*.gif"
+    - "!**/*.ico"
+    - "!**/*.lock"
+    - "!build/**"
+    - "!dist/**"
+    - "!.artifacts/**"
+    - "!**/*.whl"
+
+  path_instructions:
+    - path: "src/pokeapi_lakehouse/sql/**"
+      instructions: |
+        Revise SQL Databricks/Delta Lake com foco em contratos de dados.
+        Verifique:
+        - Não usar SELECT * em produtos Silver/Gold finais.
+        - DDL, stage, merge e quality devem estar alinhados.
+        - MERGE com UPDATE SET * só é aceitável se stage e target tiverem schema compatível.
+        - Chaves compostas criadas pelo projeto devem usar "|" como separador, não ":".
+        - Silver deve consumir exclusivamente Bronze.
+        - Gold deve consumir Silver/Gold conforme arquitetura documentada.
+        - Bronze não deve aplicar regra de negócio.
+        - Tabelas Gold devem documentar grain, chaves, timezone, unidades e semântica.
+        - Para marts pequenas, não sugerir particionamento físico sem evidência de volume/custo.
+        - Não sugerir OPTIMIZE/ZORDER sem medição real.
+
+    - path: "src/pokeapi_lakehouse/**/*.py"
+      instructions: |
+        Revise Python como orquestração SQL-first para Databricks.
+        Verifique:
+        - Mudanças devem preservar idempotência.
+        - Não adicionar dependências sem necessidade clara.
+        - Não hardcodar secrets, hosts, tokens ou credenciais.
+        - Erros devem ser acionáveis.
+        - Timezone deve respeitar o padrão do projeto.
+        - Alterações em produtos Bronze/Silver/Gold devem ter testes e documentação.
+        - Não mover regra de contrato de dados para Python se ela pertence ao SQL.
+
+    - path: "resources/**/*.yml"
+      instructions: |
+        Revise Databricks Asset Bundles.
+        Verifique:
+        - Dependências entre tasks estão corretas.
+        - Tasks que dependem de fatos pesados rodam depois da publicação desses fatos.
+        - Não sugerir deploy/run automático em CI sem decisão explícita.
+        - CD deve fazer deploy do bundle, não rodar carga de dados automaticamente.
+        - Branch principal do projeto é master, não main.
+
+    - path: "src/pokeapi_lakehouse/contracts/**/*.yaml"
+      instructions: |
+        Revise contratos YAML como data dictionaries.
+        Verifique:
+        - Todo produto/tabela deve ter descrição, grain, primary_key e foreign_keys quando aplicável.
+        - Colunas devem ter tipo, nullability, descrição e papel semântico.
+        - Expectations devem cobrir nulos técnicos, duplicatas, faixas e integridade quando aplicável.
+        - Contratos devem estar alinhados com os DDLs SQL correspondentes.
+
+    - path: "tests/**"
+      instructions: |
+        Revise testes com foco em regressão de contratos.
+        Verifique:
+        - Bugs corrigidos devem ter teste regressivo.
+        - Testes devem validar decisões críticas de arquitetura.
+        - Evitar testes frágeis que só conferem formatação sem valor.
+        - Testes de SQL devem proteger fontes, chaves, particionamento e ausência de SELECT *.
+
+    - path: "docs/**"
+      instructions: |
+        Revise documentação como parte do contrato do projeto.
+        Verifique:
+        - Não deixar referências stale a main; branch principal é master.
+        - Não deixar formatos antigos de chaves.
+        - Não documentar estratégia de performance sem evidência.
+        - Docs devem refletir SQLs, jobs, contratos YAML e fluxo real do Databricks.
+
+    - path: ".github/workflows/**"
+      instructions: |
+        Revise GitHub Actions com foco em CI/CD seguro.
+        Verifique:
+        - Workflows devem usar master como branch principal, não main.
+        - Secrets nunca devem aparecer em logs ou arquivos versionados.
+        - CI deve validar lint, tipos, testes e bundle quando aplicável.
+        - CD Databricks deve fazer deploy do bundle; execução de carga de dados requer decisão explícita.

@@ -10,8 +10,8 @@ deploy reproduzível. Os testes locais não chamam a PokéAPI nem alteram tabela
 1. Pull requests e pushes executam formatação, lint, mypy, Bandit, auditoria de
    dependências, pytest, contratos Great Expectations, cobertura mínima de 40% e build
    do wheel.
-2. O CodeQL procura vulnerabilidades Python em pull requests, na `main` e semanalmente.
-3. Um push aprovado na `main` dispara o CD somente depois que o workflow `CI` termina
+2. O CodeQL procura vulnerabilidades Python em pull requests, na `master` e semanalmente.
+3. Um push aprovado na `master` dispara o CD somente depois que o workflow `CI` termina
    com sucesso.
 4. O job de CD espera a aprovação do ambiente GitHub `development`, valida o bundle e
    então executa `databricks bundle deploy -t dev`.
@@ -24,14 +24,14 @@ de código da ingestão e evita consumo ou alteração de dados sem uma decisão
 Crie um Environment chamado `development` em **Settings > Environments**:
 
 - adicione ao menos um *required reviewer*;
-- restrinja a implantação à branch `main`;
+- restrinja a implantação à branch `master`;
 - crie a variável `DATABRICKS_HOST` com a URL do workspace;
 - crie o secret `DATABRICKS_TOKEN` com um token de curta duração e menor privilégio.
 
 Para uso profissional, substitua o token por OAuth de uma service principal. Nunca
 adicione credenciais ao repositório, aos arquivos do bundle ou aos logs.
 
-Em **Settings > Branches**, proteja a `main` e torne obrigatórios:
+Em **Settings > Branches**, proteja a `master` e torne obrigatórios:
 
 - `CI / Qualidade, testes e segurança`;
 - `CodeQL / Análise estática Python`;
