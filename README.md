@@ -77,7 +77,3 @@ execução sem `--dry-run` altera metadados no Databricks e exige autorização 
 A pasta `.hermes/` concentra configurações, hooks e skills de apoio ao
 desenvolvimento com Hermes e Databricks. Ela deve ser preservada como material ativo
 do projeto.
-
-O snapshot bruto `.databricks-ai-tools/` não é necessário no repositório quando as
-skills úteis já estão organizadas em `.hermes/`; por isso ele fica ignorado para evitar
-duplicidade e ruído em lint/testes.

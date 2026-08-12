@@ -33,13 +33,13 @@ jobs:
 
     steps:
       - name: Checkout da revisão aprovada pelo CI
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Configurar Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
           cache: pip
@@ -51,7 +51,7 @@ jobs:
         run: python -m pip wheel . --no-deps --no-build-isolation --no-cache-dir --wheel-dir .artifacts
 
       - name: Configurar Databricks CLI
-        uses: databricks/setup-cli@d268e8b0d8f5d8cc0e743697fe702c9f8c53c950 # v0.299.2
+        uses: databricks/setup-cli@60b64e3937ee15f5a8b914664d1e78a586a9a4da # v1.11.0
 
       - name: Validar autenticação
         run: databricks current-user me
