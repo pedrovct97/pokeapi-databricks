@@ -78,6 +78,8 @@ A Gold publica contexto de jogo e fundação de batalha por grupo de versão e n
 | `workspace.pokeapi_gold_dev.dim_ruleset` | `ruleset_key`, `ruleset_id`, `version_group_name`, `battle_format`, `level` |
 | `workspace.pokeapi_gold_dev.bridge_pokemon_move` | `ruleset_key`, `ruleset_id`, `pokemon_id`, `move_id`, `move_name` |
 | `workspace.pokeapi_gold_dev.dim_pokemon` | `pokemon_id`, `canonical_name`, `generation_id`, `generation_name`, `official_artwork_url`, `sprite_url`, `types`, `stats` |
+| `workspace.pokeapi_gold_dev.mart_game_pokemon_options` | Opções prontas de jogo, nível e Pokémon para filtros/dropdowns da UI. |
+| `workspace.pokeapi_gold_dev.mart_matchup_explorer` | Confrontos já enriquecidos com nomes, sprites, tipos, métricas e explicabilidade para a tela principal. |
 | `workspace.pokeapi_gold_dev.fact_pokemon_matchup` | `game_version_key`, `version_name`, `game_version_display_name`, `version_group_name`, `battle_level`, métricas finais e `prediction_reason` |
 
 O ruleset de batalha é derivado de `version_group_name` e `battle_level`, no formato
@@ -140,33 +142,47 @@ ORDER BY generation_id, version_id;
 
 ### Lista de Pokémon disponíveis para o jogo
 
-Primeira versão pragmática: considerar Pokémon com pelo menos um golpe disponível no grupo de versão selecionado.
+Primeira versão pragmática: consumir a mart Gold `mart_game_pokemon_options`, que considera Pokémon
+com perfil de batalha disponível no ruleset do grupo de versão e nível selecionados. Essa mart evita
+que a UI precise consultar tabelas técnicas ou escanear a `fact_pokemon_matchup`.
 
 ```sql
-SELECT DISTINCT
-  p.canonical_name,
-  p.official_artwork_url,
-  p.sprite_url,
-  p.types
-FROM workspace.pokeapi_gold_dev.dim_pokemon p
-JOIN workspace.pokeapi_gold_dev.bridge_pokemon_move m
-  ON p.pokemon_key = m.pokemon_key
-JOIN workspace.pokeapi_gold_dev.dim_ruleset r
-  ON m.ruleset_key = r.ruleset_key
-WHERE r.version_group_name = :version_group_name
-ORDER BY p.canonical_name;
+SELECT
+  version_name,
+  battle_level,
+  pokemon_key,
+  pokemon_id,
+  localized_name,
+  canonical_name,
+  display_name,
+  primary_type_name,
+  secondary_type_name,
+  sprite_url,
+  official_artwork_url,
+  is_legendary,
+  is_mythical
+FROM workspace.pokeapi_gold_dev.mart_game_pokemon_options
+WHERE version_name = :version_name
+  AND battle_level = :battle_level
+ORDER BY localized_name, pokemon_id;
 ```
 
-Limitação: essa abordagem usa disponibilidade de golpes como proxy de disponibilidade do Pokémon. Para disponibilidade fiel por jogo, será necessário modelar Pokédex/encontros ou outra fonte de presença do Pokémon na versão.
+Limitação: essa abordagem usa disponibilidade no perfil de batalha por ruleset como proxy de
+disponibilidade do Pokémon. Para disponibilidade fiel por jogo, será necessário modelar
+Pokédex/encontros ou outra fonte de presença do Pokémon na versão.
 
 ### Confronto selecionado
 
 ```sql
 SELECT
-  a.canonical_name AS attacker_pokemon_name,
-  a.official_artwork_url AS attacker_artwork_url,
-  d.canonical_name AS defender_pokemon_name,
-  d.official_artwork_url AS defender_artwork_url,
+  attacker_display_name,
+  attacker_official_artwork_url,
+  attacker_primary_type_name,
+  attacker_secondary_type_name,
+  defender_display_name,
+  defender_official_artwork_url,
+  defender_primary_type_name,
+  defender_secondary_type_name,
   m.attacker_best_move_name,
   m.attacker_expected_damage,
   m.attacker_damage_pct,
@@ -181,13 +197,9 @@ SELECT
   m.defender_turns_to_ko,
   m.matchup_score,
   m.attacker_win_probability,
-  m.predicted_winner_key,
+  m.predicted_winner_display_name,
   m.prediction_reason
-FROM workspace.pokeapi_gold_dev.fact_pokemon_matchup m
-JOIN workspace.pokeapi_gold_dev.dim_pokemon a
-  ON a.pokemon_key = m.attacker_pokemon_key
-JOIN workspace.pokeapi_gold_dev.dim_pokemon d
-  ON d.pokemon_key = m.defender_pokemon_key
+FROM workspace.pokeapi_gold_dev.mart_matchup_explorer m
 WHERE m.version_name = :version_name
   AND m.battle_level = :battle_level
   AND m.attacker_pokemon_key = :attacker_pokemon_key
@@ -198,18 +210,14 @@ WHERE m.version_name = :version_name
 
 ```sql
 SELECT
-  a.canonical_name AS attacker_pokemon_name,
-  d.canonical_name AS defender_pokemon_name,
+  attacker_display_name,
+  defender_display_name,
   m.attacker_best_move_name,
   m.defender_best_move_name,
   m.attacker_win_probability,
   m.matchup_score,
   m.prediction_reason
-FROM workspace.pokeapi_gold_dev.fact_pokemon_matchup m
-JOIN workspace.pokeapi_gold_dev.dim_pokemon a
-  ON a.pokemon_key = m.attacker_pokemon_key
-JOIN workspace.pokeapi_gold_dev.dim_pokemon d
-  ON d.pokemon_key = m.defender_pokemon_key
+FROM workspace.pokeapi_gold_dev.mart_matchup_explorer m
 WHERE m.version_name = :version_name
   AND m.battle_level = :battle_level
 ORDER BY m.attacker_win_probability DESC, m.matchup_score DESC
@@ -232,6 +240,10 @@ A fundação atual do dashboard está implementada na Gold:
 
 - `dim_version_group`: dimensão de grupos de versão da PokéAPI;
 - `dim_game_version`: dimensão de jogos/versões para o filtro primário do dashboard;
+- `mart_game_pokemon_options`: mart leve de opções por jogo, nível e Pokémon para alimentar filtros
+  sem escanear a fact de matchups;
+- `mart_matchup_explorer`: mart principal da tela de confronto, derivada da `fact_pokemon_matchup`
+  com nomes, tipos, sprites, vencedor previsto e explicabilidade prontos para consumo;
 - `fact_pokemon_matchup`: fato de confrontos com colunas de jogo/versão para filtro direto
   (`game_version_key`, `version_id`, `version_name`, `game_version_display_name`,
   `version_group_key`, `version_group_name`) e particionamento por `version_name` e
@@ -252,6 +264,10 @@ filtrando níveis sem colisão de chave.
 
 Não há mais execução full/global da `fact_pokemon_matchup` dentro da foundation. O job usa somente
 os SQLs particionados de matchup, preservando a retomada manual de partições faltantes ou falhadas.
+A `mart_game_pokemon_options` roda na task `gold_transform`, depois da fundação de batalha e antes
+dos workers pesados de matchup. A `mart_matchup_explorer` roda em uma task posterior,
+`publish_matchup_serving_marts`, porque depende da `fact_pokemon_matchup` já consolidada pelos
+workers.
 
 Grupos splitados por nível na configuração inicial de performance:
 `ultra-sun-ultra-moon`, `sun-moon`, `scarlet-violet`, `omega-ruby-alpha-sapphire`, `x-y`,

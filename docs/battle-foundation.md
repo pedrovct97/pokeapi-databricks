@@ -98,6 +98,18 @@ Cada produto possui DDL, staging, `MERGE` idempotente e consulta de qualidade. `
 registra uma linha por produto e execução. Nulos técnicos, faixas inválidas ou chaves duplicadas
 fazem a task falhar.
 
+O campo `_gold_runs.product` usa `|` como separador canônico em chaves compostas, nunca `:`. Produtos
+sem partição registram apenas o nome do produto, por exemplo `dim_pokemon`. Partições de matchup
+registram o produto seguido da partição executada:
+
+```txt
+fact_pokemon_matchup|<version_group_name>
+fact_pokemon_matchup|<version_group_name>|<battle_level>
+```
+
+A ordem é sempre `product|version_group_name|battle_level`; o `battle_level` só aparece quando a
+task foi splitada por nível.
+
 Para `fact_pokemon_matchup`, o DDL da tabela continua centralizado, mas os SQLs de staging,
 `MERGE` e qualidade são apenas os particionados por `version_group_name` ou
 `version_group_name|battle_level`. O caminho full/global foi removido para evitar uma rota pesada

@@ -175,6 +175,21 @@ resources:
                   - "{{job.parameters.gold_schema}}"
                   - --partition
                   - "{{input}}"
+        - task_key: publish_matchup_serving_marts
+          depends_on:
+            - task_key: publish_matchup_partitions
+          environment_key: default
+          timeout_seconds: 3600
+          max_retries: 1
+          min_retry_interval_millis: 60000
+          python_wheel_task:
+            package_name: pokeapi_lakehouse
+            entry_point: matchup_serving_marts
+            parameters:
+              - --catalog
+              - "{{job.parameters.catalog}}"
+              - --gold-schema
+              - "{{job.parameters.gold_schema}}"
       environments:
         - environment_key: default
           spec:

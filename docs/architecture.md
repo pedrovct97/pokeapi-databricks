@@ -64,6 +64,10 @@ O entrypoint `metadata_sync` lê esses contratos empacotados no wheel e sincroni
 Unity Catalog. Ele é separado das cargas Bronze/Silver/Gold para permitir execução sob demanda e
 evitar alterações remotas de metadados sem uma decisão explícita.
 
+A Gold também publica marts leves de serving, como `mart_game_pokemon_options`, para alimentar
+filtros e dropdowns de dashboard/app sem escanear facts pesadas. Essas marts continuam SQL-first,
+possuem contratos YAML próprios e devem ser derivadas de dimensões/fatos Gold já publicados.
+
 ## Restrições conhecidas
 
 - Databricks Free Edition oferece somente compute serverless e possui cotas.

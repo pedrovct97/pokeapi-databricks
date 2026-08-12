@@ -43,6 +43,7 @@ Silver SQL-first: [domínio de Pokémon e batalha](docs/silver-pilot.md).
 Gold SQL-first: [catálogo de Pokémon em inglês](docs/gold-pokemon-catalog.md).
 
 Fundação para batalhas: [matriz, perfis e movimentos](docs/battle-foundation.md).
+Dashboard e mart de filtros: [explorador de matchups](docs/gold-matchup-dashboard.md).
 
 ## Ambientes e isolamento
 

@@ -183,6 +183,11 @@ def _parse_matchup_partition(partition: str) -> tuple[str, str | None]:
     return version_group_name, battle_level
 
 
+def _matchup_product_label(partition: str) -> str:
+    """Return the canonical `_gold_runs.product` label for one matchup partition."""
+    return f"{MATCHUP_PRODUCT.name}|{partition}"
+
+
 def transform_matchup_gold_partition(
     spark: Any, catalog: str, silver_schema: str, gold_schema: str, partition: str
 ) -> str:
@@ -193,7 +198,7 @@ def transform_matchup_gold_partition(
     gold = f"{catalog}.{gold_schema}"
     runs_table = f"{gold}._gold_runs"
     target = f"{gold}.{MATCHUP_PRODUCT.name}"
-    product_label = f"{MATCHUP_PRODUCT.name}:{partition}"
+    product_label = _matchup_product_label(partition)
     started_at = now_brasilia()
     started_clock = time.perf_counter()
     row: dict[str, Any] = {

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS {{table}} (
- gold_run_id STRING NOT NULL COMMENT 'UUID da execução Gold', product STRING NOT NULL COMMENT 'Produto publicado',
+ gold_run_id STRING NOT NULL COMMENT 'UUID da execução Gold', product STRING NOT NULL COMMENT 'Produto publicado; partições usam formato produto|version_group_name ou produto|version_group_name|battle_level',
  started_at TIMESTAMP NOT NULL COMMENT 'Início horário de Brasília (UTC-3)', finished_at TIMESTAMP NOT NULL COMMENT 'Fim horário de Brasília (UTC-3)',
  status STRING NOT NULL COMMENT 'RUNNING, SUCCESS ou FAILED', published_count BIGINT NOT NULL COMMENT 'Linhas publicadas',
  duration_ms BIGINT NOT NULL COMMENT 'Duração em milissegundos', transformer_version STRING NOT NULL COMMENT 'Versão do pacote',

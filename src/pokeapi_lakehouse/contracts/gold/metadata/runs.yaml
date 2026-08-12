@@ -20,7 +20,7 @@ columns:
 - name: product
   type: STRING
   nullable: false
-  description: Produto publicado
+  description: Produto publicado; partições usam formato produto|version_group_name ou produto|version_group_name|battle_level
   semantic_role: dimension
 - name: started_at
   type: TIMESTAMP

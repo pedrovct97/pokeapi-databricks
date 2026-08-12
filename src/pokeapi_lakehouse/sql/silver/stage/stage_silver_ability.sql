@@ -1,6 +1,9 @@
 CREATE OR REPLACE TEMP VIEW silver_ability_stage AS
 WITH ranked AS (
- SELECT *,ROW_NUMBER() OVER(PARTITION BY source_url ORDER BY source_observed_at DESC,ingested_at DESC) rn FROM {{bronze_table}}
+ SELECT *,
+ ROW_NUMBER() 
+    OVER(PARTITION BY source_url ORDER BY source_observed_at DESC,ingested_at DESC) rn 
+    FROM {{bronze_table}}
 ), decoded AS (
  SELECT source_url,payload_sha256,source_observed_at,
  FROM_JSON(payload_json,'STRUCT<id:BIGINT,name:STRING,is_main_series:BOOLEAN,generation:STRUCT<name:STRING,url:STRING>>') payload

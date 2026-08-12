@@ -16,6 +16,7 @@ bronze_ingestion = "pokeapi_lakehouse.cli:main"
 silver_transform = "pokeapi_lakehouse.silver_cli:main"
 gold_transform = "pokeapi_lakehouse.gold_cli:main"
 matchup_transform = "pokeapi_lakehouse.matchup_cli:main"
+matchup_serving_marts = "pokeapi_lakehouse.matchup_serving_cli:main"
 metadata_sync = "pokeapi_lakehouse.metadata_cli:main"
 
 [project.optional-dependencies]

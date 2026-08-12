@@ -1,6 +1,11 @@
 from types import SimpleNamespace
 
-from pokeapi_lakehouse.gold import GAME_CONTEXT_PRODUCTS, ensure_gold_table_schema
+from pokeapi_lakehouse.gold import (
+    GAME_CONTEXT_PRODUCTS,
+    MATCHUP_SERVING_MART_PRODUCTS,
+    SERVING_MART_PRODUCTS,
+    ensure_gold_table_schema,
+)
 from pokeapi_lakehouse.sql_queries import sql_query
 
 
@@ -60,6 +65,66 @@ def test_gold_game_context_products_have_complete_sql_contracts() -> None:
         )
         assert "MERGE INTO" in sql_query(f"merge_gold_{product.query_name}", table=table)
         assert "duplicate_count" in sql_query(f"quality_gold_{product.query_name}", table=table)
+
+
+def test_gold_serving_mart_products_have_complete_sql_contracts() -> None:
+    assert [product.name for product in SERVING_MART_PRODUCTS] == ["mart_game_pokemon_options"]
+    assert [product.name for product in MATCHUP_SERVING_MART_PRODUCTS] == ["mart_matchup_explorer"]
+
+
+def test_gold_game_pokemon_options_mart_has_complete_sql_contract() -> None:
+    product = SERVING_MART_PRODUCTS[0]
+    table = f"workspace.pokeapi_gold_dev.{product.name}"
+    identifiers = {source: f"workspace.pokeapi_gold_dev.{source}" for source in product.sources}
+
+    create = sql_query(f"create_gold_{product.query_name}", table=table)
+    stage = sql_query(
+        f"stage_gold_{product.query_name}",
+        identifiers=identifiers,
+        literals={"run_id": "test-run"},
+    )
+    merge = sql_query(f"merge_gold_{product.query_name}", table=table)
+    quality = sql_query(f"quality_gold_{product.query_name}", table=table)
+
+    assert "CREATE TABLE" in create
+    assert "CLUSTER BY (version_name,battle_level)" in create
+    assert "PARTITIONED BY" not in create
+    assert "TEMP VIEW" in stage
+    assert "FROM workspace.pokeapi_gold_dev.fact_pokemon_battle_stats" in stage
+    assert "JOIN workspace.pokeapi_gold_dev.dim_game_version" in stage
+    assert "JOIN workspace.pokeapi_gold_dev.dim_pokemon" in stage
+    assert "fact_pokemon_matchup" not in stage
+    assert "MERGE INTO" in merge
+    assert "duplicate_count" in quality
+
+
+def test_gold_matchup_explorer_mart_has_complete_sql_contract() -> None:
+    product = MATCHUP_SERVING_MART_PRODUCTS[0]
+    assert product.name == "mart_matchup_explorer"
+    table = f"workspace.pokeapi_gold_dev.{product.name}"
+    identifiers = {source: f"workspace.pokeapi_gold_dev.{source}" for source in product.sources}
+
+    create = sql_query(f"create_gold_{product.query_name}", table=table)
+    stage = sql_query(
+        f"stage_gold_{product.query_name}",
+        identifiers=identifiers,
+        literals={"run_id": "test-run"},
+    )
+    merge = sql_query(f"merge_gold_{product.query_name}", table=table)
+    quality = sql_query(f"quality_gold_{product.query_name}", table=table)
+
+    assert "CREATE TABLE" in create
+    assert "PARTITIONED BY (version_name,battle_level)" in create
+    assert "CLUSTER BY" not in create
+    assert "TEMP VIEW" in stage
+    assert "FROM workspace.pokeapi_gold_dev.fact_pokemon_matchup" in stage
+    assert stage.count("JOIN workspace.pokeapi_gold_dev.dim_pokemon") == 2
+    assert "attacker_display_name" in stage
+    assert "defender_display_name" in stage
+    assert "SELECT *" not in stage.upper()
+    assert "MERGE INTO" in merge
+    assert "WHEN NOT MATCHED BY SOURCE THEN DELETE" in merge
+    assert "duplicate_count" in quality
 
 
 def test_gold_game_version_stage_uses_game_as_primary_dashboard_context() -> None:

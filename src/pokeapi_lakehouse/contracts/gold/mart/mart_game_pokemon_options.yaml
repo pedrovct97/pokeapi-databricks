@@ -1,0 +1,315 @@
+version: 1
+layer: gold
+domain: mart
+owner: pokeapi_lakehouse
+logical_name: mart_game_pokemon_options
+table: mart_game_pokemon_options
+description: Mart Gold de opções de Pokémon por jogo, version group e nível para filtros de dashboard
+grain: uma linha por jogo/versão, nível de batalha e Pokémon elegível para seleção
+primary_key:
+- option_key
+foreign_keys: []
+partition_by: []
+columns:
+- name: option_key
+  type: STRING
+  nullable: false
+  description: Chave canônica da opção no formato game_pokemon_option|version_name|battle_level|pokemon_id
+  semantic_role: business_key
+- name: game_version_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do jogo/versão disponível para filtro
+  semantic_role: business_key
+- name: version_id
+  type: BIGINT
+  nullable: false
+  description: Identificador PokéAPI do jogo/versão
+  semantic_role: business_key
+- name: version_name
+  type: STRING
+  nullable: false
+  description: Nome técnico do jogo/versão usado no dashboard
+  semantic_role: dimension
+- name: game_version_display_name
+  type: STRING
+  nullable: false
+  description: Nome amigável do jogo/versão exibido na interface
+  semantic_role: dimension
+- name: version_group_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do grupo de versão associado ao jogo
+  semantic_role: business_key
+- name: version_group_id
+  type: BIGINT
+  nullable: false
+  description: Identificador PokéAPI do grupo de versão associado
+  semantic_role: business_key
+- name: version_group_name
+  type: STRING
+  nullable: false
+  description: Nome técnico do grupo de versão associado ao jogo
+  semantic_role: dimension
+- name: generation_id
+  type: BIGINT
+  nullable: false
+  description: Identificador da geração do jogo/version group
+  semantic_role: business_key
+- name: generation_name
+  type: STRING
+  nullable: false
+  description: Nome técnico da geração do jogo/version group
+  semantic_role: dimension
+- name: region_name
+  type: STRING
+  nullable: true
+  description: Região principal do jogo quando disponível na PokéAPI
+  semantic_role: dimension
+- name: battle_level
+  type: INT
+  nullable: false
+  description: Nível de batalha suportado para seleção no dashboard
+  semantic_role: metric
+- name: pokemon_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do Pokémon disponível para seleção
+  semantic_role: business_key
+- name: pokemon_id
+  type: BIGINT
+  nullable: false
+  description: Identificador PokéAPI do Pokémon disponível para seleção
+  semantic_role: business_key
+- name: canonical_name
+  type: STRING
+  nullable: false
+  description: Nome técnico estável do Pokémon na PokéAPI
+  semantic_role: dimension
+- name: localized_name
+  type: STRING
+  nullable: false
+  description: Nome oficial em inglês do Pokémon para exibição
+  semantic_role: dimension
+- name: display_name
+  type: STRING
+  nullable: false
+  description: Rótulo amigável do Pokémon exibido em dropdowns e cards
+  semantic_role: dimension
+- name: species_id
+  type: BIGINT
+  nullable: true
+  description: Identificador da espécie do Pokémon quando disponível
+  semantic_role: business_key
+- name: pokemon_generation_id
+  type: BIGINT
+  nullable: true
+  description: Geração de origem do Pokémon
+  semantic_role: business_key
+- name: pokemon_generation_name
+  type: STRING
+  nullable: true
+  description: Nome técnico da geração de origem do Pokémon
+  semantic_role: dimension
+- name: primary_type_name
+  type: STRING
+  nullable: true
+  description: Primeiro tipo do Pokémon em inglês
+  semantic_role: dimension
+- name: secondary_type_name
+  type: STRING
+  nullable: true
+  description: Segundo tipo do Pokémon em inglês quando existir
+  semantic_role: dimension
+- name: types
+  type: ARRAY
+  nullable: false
+  description: Tipos ordenados do Pokémon em inglês
+  semantic_role: dimension
+- name: sprite_url
+  type: STRING
+  nullable: true
+  description: Sprite frontal padrão usado em listas compactas
+  semantic_role: dimension
+- name: official_artwork_url
+  type: STRING
+  nullable: true
+  description: Arte oficial padrão usada em cards visuais
+  semantic_role: dimension
+- name: is_default
+  type: BOOLEAN
+  nullable: false
+  description: Indica se a variedade do Pokémon é a padrão
+  semantic_role: quality
+- name: is_baby
+  type: BOOLEAN
+  nullable: true
+  description: Indica se o Pokémon é bebê
+  semantic_role: quality
+- name: is_legendary
+  type: BOOLEAN
+  nullable: true
+  description: Indica se o Pokémon é lendário
+  semantic_role: quality
+- name: is_mythical
+  type: BOOLEAN
+  nullable: true
+  description: Indica se o Pokémon é mítico
+  semantic_role: quality
+- name: is_available_for_battle
+  type: BOOLEAN
+  nullable: false
+  description: Indica se o Pokémon possui stats de batalha para o jogo e nível
+  semantic_role: quality
+- name: availability_source
+  type: STRING
+  nullable: false
+  description: Fonte/proxy usado para disponibilidade; atualmente battle_stats por ruleset
+  semantic_role: dimension
+- name: gold_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da publicação Gold
+  semantic_role: audit
+- name: gold_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Gold responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - option_key
+  - game_version_key
+  - version_id
+  - version_name
+  - game_version_display_name
+  - version_group_key
+  - version_group_id
+  - version_group_name
+  - generation_id
+  - generation_name
+  - region_name
+  - battle_level
+  - pokemon_key
+  - pokemon_id
+  - canonical_name
+  - localized_name
+  - display_name
+  - species_id
+  - pokemon_generation_id
+  - pokemon_generation_name
+  - primary_type_name
+  - secondary_type_name
+  - types
+  - sprite_url
+  - official_artwork_url
+  - is_default
+  - is_baby
+  - is_legendary
+  - is_mythical
+  - is_available_for_battle
+  - availability_source
+  - gold_transformed_at
+  - gold_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - option_key
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - option_key
+  severity: error
+- name: game_version_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: game_version_key
+  severity: error
+- name: version_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_id
+  severity: error
+- name: version_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_name
+  severity: error
+- name: game_version_display_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: game_version_display_name
+  severity: error
+- name: version_group_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_key
+  severity: error
+- name: version_group_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_id
+  severity: error
+- name: version_group_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_name
+  severity: error
+- name: generation_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: generation_id
+  severity: error
+- name: generation_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: generation_name
+  severity: error
+- name: battle_level_not_null
+  type: expect_column_values_to_not_be_null
+  column: battle_level
+  severity: error
+- name: pokemon_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: pokemon_key
+  severity: error
+- name: pokemon_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: pokemon_id
+  severity: error
+- name: canonical_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: canonical_name
+  severity: error
+- name: localized_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: localized_name
+  severity: error
+- name: display_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: display_name
+  severity: error
+- name: types_not_null
+  type: expect_column_values_to_not_be_null
+  column: types
+  severity: error
+- name: is_default_not_null
+  type: expect_column_values_to_not_be_null
+  column: is_default
+  severity: error
+- name: is_available_for_battle_not_null
+  type: expect_column_values_to_not_be_null
+  column: is_available_for_battle
+  severity: error
+- name: availability_source_not_null
+  type: expect_column_values_to_not_be_null
+  column: availability_source
+  severity: error
+- name: gold_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_transformed_at
+  severity: error
+- name: gold_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_run_id
+  severity: error
+sql_templates:
+- sql/gold/create/create_gold_mart_game_pokemon_options.sql
+- sql/gold/stage/stage_gold_mart_game_pokemon_options.sql
+- sql/gold/merge/merge_gold_mart_game_pokemon_options.sql
+- sql/gold/quality/quality_gold_mart_game_pokemon_options.sql

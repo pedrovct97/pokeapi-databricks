@@ -79,6 +79,22 @@ GAME_CONTEXT_PRODUCTS = (
     ),
 )
 
+SERVING_MART_PRODUCTS = (
+    GoldContextProduct(
+        "mart_game_pokemon_options",
+        "mart_game_pokemon_options",
+        ("dim_game_version", "dim_pokemon", "fact_pokemon_battle_stats"),
+    ),
+)
+
+MATCHUP_SERVING_MART_PRODUCTS = (
+    GoldContextProduct(
+        "mart_matchup_explorer",
+        "mart_matchup_explorer",
+        ("fact_pokemon_matchup", "dim_pokemon"),
+    ),
+)
+
 
 def _quality_passed(quality: Any) -> bool:
     return quality is not None and all(
@@ -245,3 +261,101 @@ def transform_gold_pokemon_catalog(
         raise
     _upsert_run(spark, runs_table, row)
     return run_id
+
+
+def _identifiers_for_gold_sources(product: GoldContextProduct, gold: str) -> dict[str, str]:
+    return {source: f"{gold}.{source}" for source in product.sources}
+
+
+def _transform_gold_serving_marts(
+    spark: Any,
+    catalog: str,
+    gold_schema: str,
+    products: tuple[GoldContextProduct, ...],
+    label: str,
+) -> str:
+    """Publish Gold serving marts for dashboard/app consumption."""
+    run_id = str(uuid.uuid4())
+    gold = f"{catalog}.{gold_schema}"
+    runs_table = f"{gold}._gold_runs"
+    failures: list[str] = []
+    configure_brasilia_timezone(spark)
+
+    for product in products:
+        started_at = now_brasilia()
+        started_clock = time.perf_counter()
+        target = f"{gold}.{product.name}"
+        row: dict[str, Any] = {
+            "gold_run_id": run_id,
+            "product": product.name,
+            "started_at": started_at,
+            "finished_at": started_at,
+            "status": "RUNNING",
+            "published_count": 0,
+            "duration_ms": 0,
+            "transformer_version": __version__,
+            "error_message": None,
+        }
+        _upsert_run(spark, runs_table, row)
+        try:
+            spark.sql(sql_query(f"create_gold_{product.query_name}", table=target))
+            ensure_gold_table_schema(spark, target, product.query_name)
+            spark.sql(
+                sql_query(
+                    f"stage_gold_{product.query_name}",
+                    identifiers=_identifiers_for_gold_sources(product, gold),
+                    literals={"run_id": run_id},
+                )
+            )
+            spark.sql(sql_query(f"merge_gold_{product.query_name}", table=target))
+            quality = spark.sql(
+                sql_query(f"quality_gold_{product.query_name}", table=target)
+            ).first()
+            if not _quality_passed(quality):
+                raise ValueError(
+                    f"qualidade Gold inválida em {target}: "
+                    f"nulos={quality.technical_null_count if quality else 'n/a'}, "
+                    f"faixas={quality.range_violation_count if quality else 'n/a'}, "
+                    f"duplicatas={quality.duplicate_count if quality else 'n/a'}"
+                )
+            row.update(
+                finished_at=now_brasilia(),
+                status="SUCCESS",
+                published_count=spark.table(target).count(),
+                duration_ms=round((time.perf_counter() - started_clock) * 1000),
+            )
+        except Exception as exc:
+            failures.append(product.name)
+            row.update(
+                finished_at=now_brasilia(),
+                status="FAILED",
+                duration_ms=round((time.perf_counter() - started_clock) * 1000),
+                error_message=f"{type(exc).__name__}: {exc}"[:1000],
+            )
+        _upsert_run(spark, runs_table, row)
+
+    if failures:
+        raise RuntimeError(f"marts Gold de {label} {run_id} falharam: {', '.join(failures)}")
+    return run_id
+
+
+def transform_gold_serving_marts(spark: Any, catalog: str, gold_schema: str) -> str:
+    """Publish lightweight Gold serving marts available before matchup partition workers."""
+    return _transform_gold_serving_marts(
+        spark,
+        catalog,
+        gold_schema,
+        SERVING_MART_PRODUCTS,
+        "serving",
+    )
+
+
+def transform_gold_matchup_serving_marts(spark: Any, catalog: str, gold_schema: str) -> str:
+    """Publish Gold serving marts that depend on the final matchup fact."""
+    return _transform_gold_serving_marts(
+        spark,
+        catalog,
+        gold_schema,
+        MATCHUP_SERVING_MART_PRODUCTS,
+        "matchup serving",
+    )

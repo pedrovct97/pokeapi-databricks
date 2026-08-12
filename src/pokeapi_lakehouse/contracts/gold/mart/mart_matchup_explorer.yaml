@@ -1,0 +1,500 @@
+version: 1
+layer: gold
+domain: mart
+owner: pokeapi_lakehouse
+logical_name: mart_matchup_explorer
+table: mart_matchup_explorer
+description: Mart Gold principal para exploração visual de confrontos Pokémon por jogo, nível, atacante
+  e defensor
+grain: uma linha por jogo/versão, nível de batalha, Pokémon atacante e Pokémon defensor
+primary_key:
+- matchup_key
+foreign_keys: []
+partition_by:
+- version_name
+- battle_level
+columns:
+- name: matchup_key
+  type: STRING
+  nullable: false
+  description: Chave direcional do confronto no formato matchup|game_version|ruleset|attacker_id|defender_id
+  semantic_role: business_key
+- name: ruleset_key
+  type: STRING
+  nullable: false
+  description: Chave do ruleset aplicado ao cálculo do confronto
+  semantic_role: business_key
+- name: ruleset_id
+  type: STRING
+  nullable: false
+  description: Identificador legível do ruleset aplicado ao cálculo do confronto
+  semantic_role: business_key
+- name: battle_level
+  type: INT
+  nullable: false
+  description: Nível de batalha usado nos cálculos de stats, dano e turnos para KO
+  semantic_role: metric
+- name: game_version_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do jogo/versão usado como filtro de contexto no dashboard
+  semantic_role: business_key
+- name: version_id
+  type: BIGINT
+  nullable: false
+  description: Identificador PokéAPI do jogo/versão usado no contexto do confronto
+  semantic_role: business_key
+- name: version_name
+  type: STRING
+  nullable: false
+  description: Nome técnico do jogo/versão usado no contexto do confronto
+  semantic_role: dimension
+- name: game_version_display_name
+  type: STRING
+  nullable: false
+  description: Nome amigável do jogo/versão exibido no dashboard
+  semantic_role: dimension
+- name: version_group_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do grupo de versão associado ao ruleset do confronto
+  semantic_role: business_key
+- name: version_group_name
+  type: STRING
+  nullable: false
+  description: Nome técnico do grupo de versão associado ao ruleset do confronto
+  semantic_role: dimension
+- name: attacker_pokemon_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do Pokémon atacante
+  semantic_role: business_key
+- name: attacker_pokemon_id
+  type: BIGINT
+  nullable: false
+  description: Identificador PokéAPI do Pokémon atacante
+  semantic_role: business_key
+- name: attacker_canonical_name
+  type: STRING
+  nullable: false
+  description: Nome técnico estável do Pokémon atacante
+  semantic_role: dimension
+- name: attacker_display_name
+  type: STRING
+  nullable: false
+  description: Nome amigável do Pokémon atacante exibido na interface
+  semantic_role: dimension
+- name: attacker_primary_type_name
+  type: STRING
+  nullable: true
+  description: Primeiro tipo do Pokémon atacante em inglês
+  semantic_role: dimension
+- name: attacker_secondary_type_name
+  type: STRING
+  nullable: true
+  description: Segundo tipo do Pokémon atacante em inglês quando existir
+  semantic_role: dimension
+- name: attacker_types
+  type: ARRAY
+  nullable: false
+  description: Tipos ordenados do Pokémon atacante
+  semantic_role: dimension
+- name: attacker_sprite_url
+  type: STRING
+  nullable: true
+  description: Sprite frontal padrão do Pokémon atacante
+  semantic_role: dimension
+- name: attacker_official_artwork_url
+  type: STRING
+  nullable: true
+  description: Arte oficial do Pokémon atacante usada em cards visuais
+  semantic_role: dimension
+- name: defender_pokemon_key
+  type: STRING
+  nullable: false
+  description: Chave canônica do Pokémon defensor
+  semantic_role: business_key
+- name: defender_pokemon_id
+  type: BIGINT
+  nullable: false
+  description: Identificador PokéAPI do Pokémon defensor
+  semantic_role: business_key
+- name: defender_canonical_name
+  type: STRING
+  nullable: false
+  description: Nome técnico estável do Pokémon defensor
+  semantic_role: dimension
+- name: defender_display_name
+  type: STRING
+  nullable: false
+  description: Nome amigável do Pokémon defensor exibido na interface
+  semantic_role: dimension
+- name: defender_primary_type_name
+  type: STRING
+  nullable: true
+  description: Primeiro tipo do Pokémon defensor em inglês
+  semantic_role: dimension
+- name: defender_secondary_type_name
+  type: STRING
+  nullable: true
+  description: Segundo tipo do Pokémon defensor em inglês quando existir
+  semantic_role: dimension
+- name: defender_types
+  type: ARRAY
+  nullable: false
+  description: Tipos ordenados do Pokémon defensor
+  semantic_role: dimension
+- name: defender_sprite_url
+  type: STRING
+  nullable: true
+  description: Sprite frontal padrão do Pokémon defensor
+  semantic_role: dimension
+- name: defender_official_artwork_url
+  type: STRING
+  nullable: true
+  description: Arte oficial do Pokémon defensor usada em cards visuais
+  semantic_role: dimension
+- name: attacker_best_move_key
+  type: STRING
+  nullable: false
+  description: Chave do melhor movimento de dano selecionado para o atacante
+  semantic_role: business_key
+- name: attacker_best_move_name
+  type: STRING
+  nullable: false
+  description: Nome em inglês do melhor movimento selecionado para o atacante
+  semantic_role: dimension
+- name: attacker_type_multiplier
+  type: DOUBLE
+  nullable: false
+  description: Multiplicador de efetividade do movimento atacante contra os tipos do defensor
+  semantic_role: metric
+- name: attacker_stab_multiplier
+  type: DOUBLE
+  nullable: false
+  description: Multiplicador STAB do atacante; 1.5 quando o movimento compartilha tipo com o Pokémon
+  semantic_role: metric
+- name: attacker_expected_damage
+  type: DECIMAL(10,2)
+  nullable: false
+  description: Dano esperado arredondado do atacante no baseline determinístico
+  semantic_role: metric
+- name: attacker_damage_pct
+  type: DECIMAL(10,2)
+  nullable: false
+  description: Percentual do HP do defensor removido pelo dano esperado do atacante
+  semantic_role: metric
+- name: attacker_turns_to_ko
+  type: INT
+  nullable: false
+  description: Turnos estimados para o atacante nocautear o defensor; 999 quando não causa dano
+  semantic_role: metric
+- name: defender_best_move_key
+  type: STRING
+  nullable: false
+  description: Chave do melhor movimento de dano selecionado para o defensor
+  semantic_role: business_key
+- name: defender_best_move_name
+  type: STRING
+  nullable: false
+  description: Nome em inglês do melhor movimento selecionado para o defensor
+  semantic_role: dimension
+- name: defender_type_multiplier
+  type: DOUBLE
+  nullable: false
+  description: Multiplicador de efetividade do movimento defensor contra os tipos do atacante
+  semantic_role: metric
+- name: defender_stab_multiplier
+  type: DOUBLE
+  nullable: false
+  description: Multiplicador STAB do defensor; 1.5 quando o movimento compartilha tipo com o Pokémon
+  semantic_role: metric
+- name: defender_expected_damage
+  type: DECIMAL(10,2)
+  nullable: false
+  description: Dano esperado arredondado do defensor no baseline determinístico
+  semantic_role: metric
+- name: defender_damage_pct
+  type: DECIMAL(10,2)
+  nullable: false
+  description: Percentual do HP do atacante removido pelo dano esperado do defensor
+  semantic_role: metric
+- name: defender_turns_to_ko
+  type: INT
+  nullable: false
+  description: Turnos estimados para o defensor nocautear o atacante; 999 quando não causa dano
+  semantic_role: metric
+- name: attacker_moves_first
+  type: BOOLEAN
+  nullable: false
+  description: Indica se o atacante age primeiro por prioridade e velocidade no baseline
+  semantic_role: dimension
+- name: matchup_score
+  type: DECIMAL(10,2)
+  nullable: false
+  description: Score determinístico do confronto combinando turnos para KO, dano percentual e iniciativa
+  semantic_role: metric
+- name: attacker_win_probability
+  type: DECIMAL(4,2)
+  nullable: false
+  description: Probabilidade sintética do atacante vencer, derivada por transformação logística do score
+  semantic_role: metric
+- name: predicted_winner_key
+  type: STRING
+  nullable: false
+  description: Chave do Pokémon previsto como vencedor no baseline determinístico
+  semantic_role: business_key
+- name: predicted_winner_display_name
+  type: STRING
+  nullable: false
+  description: Nome amigável do Pokémon previsto como vencedor
+  semantic_role: dimension
+- name: prediction_reason
+  type: STRING
+  nullable: false
+  description: Justificativa auditável com melhor movimento, efetividade, turnos e imunidades
+  semantic_role: dimension
+- name: gold_transformed_at
+  type: TIMESTAMP
+  nullable: false
+  description: Momento horário de Brasília (UTC-3) da publicação Gold
+  semantic_role: audit
+- name: gold_run_id
+  type: STRING
+  nullable: false
+  description: UUID da execução Gold responsável pela publicação
+  semantic_role: audit
+quality_expectations:
+- name: schema_columns_match_ddl
+  type: expect_table_columns_to_match_ordered_list
+  columns:
+  - matchup_key
+  - ruleset_key
+  - ruleset_id
+  - battle_level
+  - game_version_key
+  - version_id
+  - version_name
+  - game_version_display_name
+  - version_group_key
+  - version_group_name
+  - attacker_pokemon_key
+  - attacker_pokemon_id
+  - attacker_canonical_name
+  - attacker_display_name
+  - attacker_primary_type_name
+  - attacker_secondary_type_name
+  - attacker_types
+  - attacker_sprite_url
+  - attacker_official_artwork_url
+  - defender_pokemon_key
+  - defender_pokemon_id
+  - defender_canonical_name
+  - defender_display_name
+  - defender_primary_type_name
+  - defender_secondary_type_name
+  - defender_types
+  - defender_sprite_url
+  - defender_official_artwork_url
+  - attacker_best_move_key
+  - attacker_best_move_name
+  - attacker_type_multiplier
+  - attacker_stab_multiplier
+  - attacker_expected_damage
+  - attacker_damage_pct
+  - attacker_turns_to_ko
+  - defender_best_move_key
+  - defender_best_move_name
+  - defender_type_multiplier
+  - defender_stab_multiplier
+  - defender_expected_damage
+  - defender_damage_pct
+  - defender_turns_to_ko
+  - attacker_moves_first
+  - matchup_score
+  - attacker_win_probability
+  - predicted_winner_key
+  - predicted_winner_display_name
+  - prediction_reason
+  - gold_transformed_at
+  - gold_run_id
+  severity: error
+- name: primary_key_not_null
+  type: expect_column_values_to_not_be_null
+  columns:
+  - matchup_key
+  severity: error
+- name: primary_key_unique
+  type: expect_compound_columns_to_be_unique
+  columns:
+  - matchup_key
+  severity: error
+- name: ruleset_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: ruleset_key
+  severity: error
+- name: ruleset_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: ruleset_id
+  severity: error
+- name: battle_level_not_null
+  type: expect_column_values_to_not_be_null
+  column: battle_level
+  severity: error
+- name: game_version_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: game_version_key
+  severity: error
+- name: version_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_id
+  severity: error
+- name: version_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_name
+  severity: error
+- name: game_version_display_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: game_version_display_name
+  severity: error
+- name: version_group_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_key
+  severity: error
+- name: version_group_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: version_group_name
+  severity: error
+- name: attacker_pokemon_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_pokemon_key
+  severity: error
+- name: attacker_pokemon_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_pokemon_id
+  severity: error
+- name: attacker_canonical_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_canonical_name
+  severity: error
+- name: attacker_display_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_display_name
+  severity: error
+- name: attacker_types_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_types
+  severity: error
+- name: defender_pokemon_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_pokemon_key
+  severity: error
+- name: defender_pokemon_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_pokemon_id
+  severity: error
+- name: defender_canonical_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_canonical_name
+  severity: error
+- name: defender_display_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_display_name
+  severity: error
+- name: defender_types_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_types
+  severity: error
+- name: attacker_best_move_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_best_move_key
+  severity: error
+- name: attacker_best_move_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_best_move_name
+  severity: error
+- name: attacker_type_multiplier_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_type_multiplier
+  severity: error
+- name: attacker_stab_multiplier_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_stab_multiplier
+  severity: error
+- name: attacker_expected_damage_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_expected_damage
+  severity: error
+- name: attacker_damage_pct_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_damage_pct
+  severity: error
+- name: attacker_turns_to_ko_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_turns_to_ko
+  severity: error
+- name: defender_best_move_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_best_move_key
+  severity: error
+- name: defender_best_move_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_best_move_name
+  severity: error
+- name: defender_type_multiplier_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_type_multiplier
+  severity: error
+- name: defender_stab_multiplier_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_stab_multiplier
+  severity: error
+- name: defender_expected_damage_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_expected_damage
+  severity: error
+- name: defender_damage_pct_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_damage_pct
+  severity: error
+- name: defender_turns_to_ko_not_null
+  type: expect_column_values_to_not_be_null
+  column: defender_turns_to_ko
+  severity: error
+- name: attacker_moves_first_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_moves_first
+  severity: error
+- name: matchup_score_not_null
+  type: expect_column_values_to_not_be_null
+  column: matchup_score
+  severity: error
+- name: attacker_win_probability_not_null
+  type: expect_column_values_to_not_be_null
+  column: attacker_win_probability
+  severity: error
+- name: predicted_winner_key_not_null
+  type: expect_column_values_to_not_be_null
+  column: predicted_winner_key
+  severity: error
+- name: predicted_winner_display_name_not_null
+  type: expect_column_values_to_not_be_null
+  column: predicted_winner_display_name
+  severity: error
+- name: prediction_reason_not_null
+  type: expect_column_values_to_not_be_null
+  column: prediction_reason
+  severity: error
+- name: gold_transformed_at_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_transformed_at
+  severity: error
+- name: gold_run_id_not_null
+  type: expect_column_values_to_not_be_null
+  column: gold_run_id
+  severity: error
+sql_templates:
+- sql/gold/create/create_gold_mart_matchup_explorer.sql
+- sql/gold/stage/stage_gold_mart_matchup_explorer.sql
+- sql/gold/merge/merge_gold_mart_matchup_explorer.sql
+- sql/gold/quality/quality_gold_mart_matchup_explorer.sql

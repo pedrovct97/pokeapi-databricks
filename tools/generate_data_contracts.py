@@ -50,6 +50,12 @@ GRAIN_OVERRIDES = {
     "pokemon_battle_profile": (
         "uma linha por Pokémon, ruleset e nível de batalha com stats derivados"
     ),
+    "mart_game_pokemon_options": (
+        "uma linha por jogo/versão, nível de batalha e Pokémon elegível para seleção"
+    ),
+    "mart_matchup_explorer": (
+        "uma linha por jogo/versão, nível de batalha, Pokémon atacante e Pokémon defensor"
+    ),
 }
 
 PRIMARY_KEYS = {
@@ -91,10 +97,13 @@ PRIMARY_KEYS = {
     "pokemon_battle_profile": ["pokemon_key", "ruleset_key"],
     "pokemon_move_pool": ["pokemon_move_key"],
     "pokemon_matchup": ["matchup_key"],
+    "mart_game_pokemon_options": ["option_key"],
+    "mart_matchup_explorer": ["matchup_key"],
 }
 
 PARTITION_BY = {
     "pokemon_matchup": ["version_name", "battle_level"],
+    "mart_matchup_explorer": ["version_name", "battle_level"],
 }
 
 FOREIGN_KEYS = {
@@ -251,6 +260,8 @@ def _contract_domain(layer: str, logical: str) -> str:
     if layer == "gold":
         if logical == "runs":
             return "metadata"
+        if logical.startswith("mart_"):
+            return "mart"
         if logical == "pokemon_move_pool":
             return "bridge"
         if logical in {"pokemon_battle_profile", "pokemon_matchup", "type_matchup_matrix"}:
@@ -265,6 +276,8 @@ def _table_name(layer: str, domain: str, logical: str) -> str:
     if layer == "silver":
         return TABLE_ALIASES.get((layer, domain, logical), logical)
     if layer == "gold":
+        if domain == "mart":
+            return logical
         return TABLE_ALIASES.get(
             (layer, domain, logical),
             f"{domain}_{logical}" if domain in {"dim", "fact", "bridge"} else f"_{logical}",
@@ -317,6 +330,8 @@ def _grain(layer: str, domain: str, logical: str, table: str) -> str:
         return f"uma linha por entidade e idioma em {table}"
     if domain == "metadata":
         return f"uma linha de auditoria operacional em {table}"
+    if domain == "mart":
+        return f"uma linha por opção de consumo em {table}"
     if domain == "dim":
         return f"uma linha por entidade conformada em {table}"
     if domain == "fact":

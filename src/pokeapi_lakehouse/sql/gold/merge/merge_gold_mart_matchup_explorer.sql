@@ -1,0 +1,5 @@
+MERGE INTO {{table}} t USING gold_mart_matchup_explorer_stage s
+ON t.matchup_key=s.matchup_key
+WHEN MATCHED THEN UPDATE SET *
+WHEN NOT MATCHED THEN INSERT *
+WHEN NOT MATCHED BY SOURCE THEN DELETE

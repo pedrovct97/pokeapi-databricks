@@ -6,7 +6,11 @@ import argparse
 
 from pokeapi_lakehouse.battle import transform_battle_gold
 from pokeapi_lakehouse.config import LakehouseConfig
-from pokeapi_lakehouse.gold import transform_gold_game_context, transform_gold_pokemon_catalog
+from pokeapi_lakehouse.gold import (
+    transform_gold_game_context,
+    transform_gold_pokemon_catalog,
+    transform_gold_serving_marts,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -42,11 +46,17 @@ def main() -> None:
         config.silver_schema,
         config.gold_schema,
     )
+    serving_marts_run_id = transform_gold_serving_marts(
+        spark,
+        config.catalog,
+        config.gold_schema,
+    )
     print(
         "Gold transformation completed: "
         f"game_context_run_id={context_run_id}, "
         f"pokemon_catalog_run_id={catalog_run_id}, "
-        f"battle_run_id={battle_run_id}"
+        f"battle_run_id={battle_run_id}, "
+        f"serving_marts_run_id={serving_marts_run_id}"
     )
 
 

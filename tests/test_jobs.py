@@ -12,6 +12,8 @@ def test_gold_job_splits_foundation_from_matchup_partition_workers() -> None:
     assert "for_each_task:" in gold_section
     assert "concurrency: 6" in gold_section
     assert "entry_point: matchup_transform" in gold_section
+    assert "task_key: publish_matchup_serving_marts" in gold_section
+    assert "entry_point: matchup_serving_marts" in gold_section
     assert "{{input}}" in gold_section
     assert "red-blue" in gold_section
     assert "champions" in gold_section
@@ -22,6 +24,9 @@ def test_gold_job_splits_foundation_from_matchup_partition_workers() -> None:
     assert "red-blue|50" not in gold_section
     assert gold_section.count("|50") + gold_section.count("|80") + gold_section.count("|100") == 30
     assert "task_key: publish_battle_foundation" not in gold_section
+    assert gold_section.index("task_key: publish_matchup_serving_marts") > gold_section.index(
+        "task_key: publish_matchup_partitions"
+    )
 
 
 def test_metadata_sync_job_runs_dedicated_wheel_entrypoint() -> None:

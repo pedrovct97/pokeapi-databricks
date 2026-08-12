@@ -1,6 +1,11 @@
 from importlib.resources import files
 
-from pokeapi_lakehouse.battle import BATTLE_FOUNDATION_PRODUCTS, BATTLE_PRODUCTS, MATCHUP_PRODUCT
+from pokeapi_lakehouse.battle import (
+    BATTLE_FOUNDATION_PRODUCTS,
+    BATTLE_PRODUCTS,
+    MATCHUP_PRODUCT,
+    _matchup_product_label,
+)
 from pokeapi_lakehouse.sql_queries import sql_query
 
 
@@ -67,6 +72,11 @@ def test_matchup_product_uses_partitioned_sql_contracts() -> None:
         table="workspace.pokeapi_gold_dev.fact_pokemon_matchup",
         literals=literals,
     )
+
+
+def test_matchup_gold_run_product_label_uses_pipe_separator() -> None:
+    assert _matchup_product_label("diamond-pearl|50") == "fact_pokemon_matchup|diamond-pearl|50"
+    assert ":" not in _matchup_product_label("scarlet-violet|100")
 
 
 def test_battle_foundation_excludes_heavy_matchup_product_by_default() -> None:
