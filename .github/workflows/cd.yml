@@ -51,7 +51,7 @@ jobs:
         run: python -m pip wheel . --no-deps --no-build-isolation --no-cache-dir --wheel-dir .artifacts
 
       - name: Configurar Databricks CLI
-        uses: databricks/setup-cli@60b64e3937ee15f5a8b914664d1e78a586a9a4da # v1.11.0
+        uses: databricks/setup-cli@9b64c94a6d2b2e830592d80e9f14c26d32b42ad7 # v1.20.0
 
       - name: Validar autenticação
         run: databricks current-user me
